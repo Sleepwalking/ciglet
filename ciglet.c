@@ -746,3 +746,144 @@ FP_TYPE* cig_spec2env(FP_TYPE* S, int nfft, int fs, FP_TYPE f0, FP_TYPE* Cout) {
   return realloc(V, nfft * sizeof(FP_TYPE));
 }
 
+// Huber, Stefan, and Axel Roebel. "On the use of voice descriptors for glottal
+//   source shape parameter estimation." Computer Speech & Language 28.5 (2014):
+//   1170-1194.
+// Fant, Gunnar. "The LF-model revisited. Transformations and frequency domain
+//    analysis." Speech Trans. Lab. Q. Rep., Royal Inst. of Tech. Stockholm 2.3
+//    (1995): 40.
+lfmodel cig_lfmodel_from_rd(FP_TYPE rd, FP_TYPE T0, FP_TYPE Ee) {
+  lfmodel ret;
+  FP_TYPE Rap = rd < 0.21 ? 1e-6 : (rd < 2.7 ? (-1.0 + 4.8 * rd) / 100.0 : 0.323 / rd);
+  FP_TYPE OQupp = 1.0 - 1.0 / (2.17 * rd);
+  FP_TYPE Rkp, Rgp;
+  if(rd < 2.7) {
+    Rkp = (22.4 + 11.8 * rd) / 100.0;
+    Rgp = 0.25 * Rkp / ((0.11 * rd) / (0.5 + 1.2 * Rkp) - Rap);
+  } else {
+    Rgp = 9.3552e-3 + 596e-2 / (7.96 - 2.0 * OQupp);
+    Rkp = 2.0 * Rgp * OQupp - 1.0428;
+  }
+  ret.tp = 1.0 / (2.0 * Rgp);
+  ret.te = ret.tp * (Rkp + 1.0);
+  ret.ta = Rap;
+  ret.T0 = T0;
+  ret.Ee = Ee;
+  return ret;
+};
+
+typedef struct {
+  FP_TYPE T0;
+  FP_TYPE Te;
+  FP_TYPE Tp;
+  FP_TYPE Ta;
+  FP_TYPE wg;
+  FP_TYPE sin_wgTe;
+  FP_TYPE cos_wgTe;
+  FP_TYPE e;
+  FP_TYPE A;
+  FP_TYPE a;
+  FP_TYPE E0;
+} lfparam;
+
+static FP_TYPE efunc(FP_TYPE x, void* env) {
+  lfparam* tmpparam = (lfparam*)env;
+  return 1.0 - exp_3((tmpparam -> Te - tmpparam -> T0) * x) - tmpparam -> Ta * x;
+}
+
+static FP_TYPE afunc(FP_TYPE x, void* env) {
+  lfparam* tmpparam = (lfparam*)env;
+  return (x * x + tmpparam -> wg * tmpparam -> wg) * tmpparam -> sin_wgTe * tmpparam -> A +
+    tmpparam -> wg * exp_3(- x * tmpparam -> Te) + x * tmpparam -> sin_wgTe -
+    tmpparam -> wg * tmpparam -> cos_wgTe;
+}
+
+// Fant, Gunnar, Johan Liljencrants, and Qi-guang Lin. "A four-parameter model
+//    of glottal flow." STL-QPSR 4.1985 (1985): 1-13.
+static lfparam lfparam_from_lfmodel(lfmodel model) {
+  lfparam ret = {
+    .T0 = model.T0,
+    .Te = model.T0 * model.te,
+    .Tp = model.T0 * model.tp,
+    .Ta = model.T0 * model.ta
+  };
+  ret.wg = M_PI / ret.Tp;
+  ret.sin_wgTe = sin_3(ret.wg * ret.Te);
+  ret.cos_wgTe = cos_3(ret.wg * ret.Te);
+  FP_TYPE e = fzero(efunc, 1.0, 2.0 / (ret.Ta + 1e-9), & ret);
+  FP_TYPE e_Te_T0 = exp_3(e * (ret.Te - ret.T0));
+  ret.A = (1.0 - e_Te_T0) / (e * e * ret.Ta) + (ret.Te - ret.T0) * e_Te_T0 / (e * ret.Ta);
+  ret.e = e;
+  ret.a = fzero(afunc, 0.0, 1e9, & ret);
+  ret.E0 = -model.Ee / exp_3(ret.a * ret.Te) * ret.sin_wgTe;
+  return ret;
+}
+
+// B. Doval, C. d'Alessandro and N. Henrich, "The spectrum of glottal flow models",
+//   Acta acustica united with acustica, 92(6), 1026-1046, 2006.
+FP_TYPE* cig_lfmodel_spectrum(lfmodel model, FP_TYPE* freq, int nf, FP_TYPE* dst_phase) {
+  lfparam tmpparam = lfparam_from_lfmodel(model);
+  FP_TYPE e = tmpparam.e;
+  FP_TYPE a = tmpparam.a;
+  FP_TYPE wg = tmpparam.wg;
+  FP_TYPE E0 = tmpparam.E0;
+  FP_TYPE sin_wgTe = tmpparam.sin_wgTe;
+  FP_TYPE cos_wgTe = tmpparam.cos_wgTe;
+  FP_TYPE Te = tmpparam.Te;
+  FP_TYPE Ta = tmpparam.Ta;
+  FP_TYPE T0 = tmpparam.T0;
+
+  FP_TYPE* dst_magn = calloc(nf, sizeof(FP_TYPE));
+  for(int i = 0; i < nf; i ++) {
+    cplx asubipif = c_cplx(a, - 2.0 * M_PI * freq[i]);
+    cplx P1 = c_div(c_cplx(E0, 0), c_add(c_mul(asubipif, asubipif), c_cplx(wg * wg, 0)));
+    cplx P2 = c_add(c_cplx(wg, 0),
+      c_mul(c_exp(c_mul(asubipif, c_cplx(Te, 0))),
+            c_sub(c_mul(asubipif, c_cplx(sin_wgTe, 0)), c_cplx(wg * cos_wgTe, 0))
+      ));
+    cplx P3 = c_mul(c_cplx(model.Ee, 0),
+      c_div(
+        c_exp(c_cplx(0, - 2.0 * M_PI * freq[i] * Te)),
+        c_mul(c_cplx(0, e * Ta * 2.0 * M_PI * freq[i]), c_cplx(e, 2.0 * M_PI * freq[i]))
+      ));
+    cplx P4 = c_sub(
+      c_mul(c_cplx(e * (1.0 - e * Ta), 0),
+            c_sub(c_cplx(1.0, 0),
+                  c_exp(c_cplx(0, -2.0 * M_PI * freq[i] * (T0 - Te))))),
+            c_cplx(0, e * Ta * 2.0 * M_PI * freq[i]));
+    cplx G = c_add(c_mul(P1, P2), c_mul(P3, P4));
+    dst_magn[i] = c_abs(G);
+    if(isnan(dst_magn[i])) {
+      dst_magn[i] = 0;
+      G = c_cplx(0, 0);
+    }
+    if(dst_phase) dst_phase[i] = c_arg(G);
+  }
+  return dst_magn;
+}
+
+FP_TYPE* cig_lfmodel_period(lfmodel model, int fs, int n) {
+  lfparam tmpparam = lfparam_from_lfmodel(model);
+  FP_TYPE e = tmpparam.e;
+  FP_TYPE a = tmpparam.a;
+  FP_TYPE wg = tmpparam.wg;
+  FP_TYPE E0 = tmpparam.E0;
+  FP_TYPE Te = tmpparam.Te;
+  FP_TYPE Ta = tmpparam.Ta;
+  FP_TYPE T0 = tmpparam.T0;
+
+  int i;
+  int ne = round(Te * fs);
+  int nT = round(T0 * fs);
+  FP_TYPE* y = calloc(n, sizeof(FP_TYPE));
+  for(i = 0; i < min(ne, n); i ++) {
+    FP_TYPE t = (FP_TYPE)i / fs;
+    y[i] = E0 * exp_2(a * t) * sin_2(wg * t);
+  }
+  for(; i < min(nT, n); i ++) {
+    FP_TYPE t = (FP_TYPE)i / fs;
+    y[i] = - E0 / e / Ta * (exp_2(- e * (t - Te)) - exp_2(- e * (T0 - Te)));
+  }
+  return y;
+}
+

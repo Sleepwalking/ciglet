@@ -881,6 +881,32 @@ static inline FP_TYPE* spec2env(FP_TYPE* S, int nfft, int fs, FP_TYPE f0, FP_TYP
   return cig_spec2env(S, nfft, fs, f0, Cout);
 }
 
+typedef struct {
+  FP_TYPE T0;
+  FP_TYPE te;
+  FP_TYPE tp;
+  FP_TYPE ta;
+  FP_TYPE Ee;
+} lfmodel;
+
+lfmodel cig_lfmodel_from_rd(FP_TYPE rd, FP_TYPE T0, FP_TYPE Ee);
+
+static inline lfmodel lfmodel_from_rd(FP_TYPE rd, FP_TYPE T0, FP_TYPE Ee) {
+  return cig_lfmodel_from_rd(rd, T0, Ee);
+};
+
+FP_TYPE* cig_lfmodel_spectrum(lfmodel model, FP_TYPE* freq, int nf, FP_TYPE* dst_phase);
+
+static inline FP_TYPE* lfmodel_spectrum(lfmodel model, FP_TYPE* freq, int nf, FP_TYPE* dst_phase) {
+  return cig_lfmodel_spectrum(model, freq, nf, dst_phase);
+}
+
+FP_TYPE* cig_lfmodel_period(lfmodel model, int fs, int n);
+
+static inline FP_TYPE* lfmodel_period(lfmodel model, int fs, int n) {
+  return cig_lfmodel_period(model, fs, n);
+}
+
 // Plotting Functions (Gnuplot Interface)
 // Notice: not supported on Windows
 #if _POSIX_C_SOURCE >= 2

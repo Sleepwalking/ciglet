@@ -8,6 +8,23 @@ int main(void) {
   free(rand1);
   free(rand2);
 
+  lfmodel testlf = lfmodel_from_rd(1, 0.008, 0.3);
+  FP_TYPE* freq = linspace(0, 6000, 200);
+  FP_TYPE* lfmagnresp = lfmodel_spectrum(testlf, freq, 200, NULL);
+  for(int i = 0; i < 200; i ++)
+    lfmagnresp[i] = log(lfmagnresp[i]);
+  FP_TYPE* lfperiod = lfmodel_period(testlf, 44100, 500);
+
+  figure* lffg = plotopen();
+  plot(lffg, freq, lfmagnresp, 200, 'b');
+  plotclose(lffg);
+  lffg = plotopen();
+  plot(lffg, NULL, lfperiod, 500, 'b');
+  plotclose(lffg);
+  free(freq);
+  free(lfmagnresp);
+  free(lfperiod);
+
   int fs, nbit, nx, ny;
   FP_TYPE* x = wavread("test/in2.wav", & fs, & nbit, & nx);
   FP_TYPE* y = rresample(x, nx, 1.5, & ny);
