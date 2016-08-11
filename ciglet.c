@@ -42,7 +42,7 @@ void** cig_transpose(void** ptr, size_t m, size_t n, size_t size) {
       return (void**)cig_transpose_64((uint64_t**)ptr, m, n);
       break;
   }
-  fprintf(stderr, "Error: invalid element size '%ld'.\n", size);
+  fprintf(stderr, "Error: invalid element size '%d'.\n", (int)size);
   return NULL;
 }
 
