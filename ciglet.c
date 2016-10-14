@@ -135,16 +135,28 @@ FP_TYPE* cig_gensins(FP_TYPE* freq, FP_TYPE* ampl, FP_TYPE* phse,
   return x;
 }
 
-static FP_TYPE* get_window(char* name, int nw) {
-  if(! strcmp(name, "hanning"))
-    return hanning(nw);
-  else if(! strcmp(name, "hamming"))
-    return hamming(nw);
-  else if(! strcmp(name, "blackman"))
-    return blackman(nw);
-  else if(! strcmp(name, "blackman_harris"))
-    return blackman_harris(nw);
-  return boxcar(nw);
+static FP_TYPE* get_window(char* name, int nw, int optlv) {
+  if(optlv >= 3) {
+    if(! strcmp(name, "hanning"))
+      return hanning(nw);
+    else if(! strcmp(name, "hamming"))
+      return hamming(nw);
+    else if(! strcmp(name, "blackman"))
+      return blackman(nw);
+    else if(! strcmp(name, "blackman_harris"))
+      return blackman_harris(nw);
+    return boxcar(nw);
+  } else {
+    if(! strcmp(name, "hanning"))
+      return hanning_2(nw);
+    else if(! strcmp(name, "hamming"))
+      return hamming_2(nw);
+    else if(! strcmp(name, "blackman"))
+      return blackman_2(nw);
+    else if(! strcmp(name, "blackman_harris"))
+      return blackman_harris_2(nw);
+    return boxcar(nw);
+  }
 }
 
 FP_TYPE* cig_dct(FP_TYPE* x, int nx) {
@@ -215,7 +227,7 @@ FP_TYPE* cig_winfir(int order, FP_TYPE cutoff, FP_TYPE cutoff2, char* type, char
   FP_TYPE* freqrsp = calloc(order, sizeof(FP_TYPE));
   FP_TYPE* timersp = calloc(order, sizeof(FP_TYPE));
 
-  FP_TYPE* w = get_window(window, order);
+  FP_TYPE* w = get_window(window, order, 3);
   
   if(! strcmp(type, "lowpass")) {
     for(int i = 0; i <= floor(cutk); i ++)
@@ -490,7 +502,7 @@ FP_TYPE cig_fzero(fpe_one_to_one func, FP_TYPE xmin, FP_TYPE xmax, void* env) {
 }
 
 void cig_stft_forward(FP_TYPE* x, int nx, int* center, int* nwin, int nfrm,
-  int nfft, char* window, int subt_mean,
+  int nfft, char* window, int subt_mean, int optlv,
   FP_TYPE* norm_factor, FP_TYPE* weight_factor, FP_TYPE** Xmagn, FP_TYPE** Xphse) {
 
 # ifndef _OPENMP
@@ -503,7 +515,7 @@ void cig_stft_forward(FP_TYPE* x, int nx, int* center, int* nwin, int nfrm,
 
   FP_TYPE* w = NULL;
   if(norm_factor != NULL || weight_factor != NULL)
-    w = get_window(window, nwin[0]);
+    w = get_window(window, nwin[0], optlv);
 
   if(weight_factor != NULL) {
     *weight_factor = 0;
@@ -535,7 +547,7 @@ void cig_stft_forward(FP_TYPE* x, int nx, int* center, int* nwin, int nfrm,
     
     FP_TYPE* wlocal = w;
     if(norm_factor == NULL && weight_factor == NULL) {
-      wlocal = get_window(window, nwin[t]);
+      wlocal = get_window(window, nwin[t], optlv);
     }
 
     xfrm = fetch_frame(x, nx, tn, nwin[t]);

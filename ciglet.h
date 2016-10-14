@@ -176,7 +176,7 @@ static inline FP_TYPE c_arg_1(cplx a) {
 
 // vector operations & statics
 
-#define def_n_to_one(name, op, init) \
+#define CIG_DEF_N_TO_ONE(name, op, init) \
 static inline FP_TYPE name(FP_TYPE* src, int n) { \
   FP_TYPE ret = init; \
   for(int i = 0; i < n; i ++) \
@@ -184,15 +184,15 @@ static inline FP_TYPE name(FP_TYPE* src, int n) { \
   return ret; \
 }
 
-#define def_add(a, b) ((a) + (b))
-#define def_addsqr(a, b) ((a) + (b) * (b))
-#define def_max(a, b) ((a) > (b) ? (a) : (b))
-#define def_min(a, b) ((a) < (b) ? (a) : (b))
+#define CIG_DEF_ADD(a, b) ((a) + (b))
+#define CIG_DEF_ADDSQR(a, b) ((a) + (b) * (b))
+#define CIG_DEF_MAX(a, b) ((a) > (b) ? (a) : (b))
+#define CIG_DEF_MIN(a, b) ((a) < (b) ? (a) : (b))
 
-def_n_to_one(sumfp, def_add, 0);
-def_n_to_one(sumsqrfp, def_addsqr, 0);
-def_n_to_one(maxfp, def_max, src[0]);
-def_n_to_one(minfp, def_min, src[0]);
+CIG_DEF_N_TO_ONE(sumfp, CIG_DEF_ADD, 0);
+CIG_DEF_N_TO_ONE(sumsqrfp, CIG_DEF_ADDSQR, 0);
+CIG_DEF_N_TO_ONE(maxfp, CIG_DEF_MAX, src[0]);
+CIG_DEF_N_TO_ONE(minfp, CIG_DEF_MIN, src[0]);
 
 #define meanfp(src, n) (sumfp(src, n) / (n))
 
@@ -347,50 +347,70 @@ static inline FP_TYPE* boxcar(int n) {
   return ret;
 }
 
-static inline FP_TYPE* hanning(int n) {
-  FP_TYPE* ret = malloc(n * sizeof(FP_TYPE));
-  for(int i = 0; i < n; i ++)
-    ret[i] = 0.5 * (1 - cos_3(2 * M_PI * i / (n - 1)));
-  return ret;
+#define CIG_DEF_HANNING(fname, cosfunc) \
+static inline FP_TYPE* fname(int n) { \
+  FP_TYPE* ret = malloc(n * sizeof(FP_TYPE)); \
+  for(int i = 0; i < n; i ++) \
+    ret[i] = 0.5 * (1 - cosfunc(2 * M_PI * i / (n - 1))); \
+  return ret; \
 }
 
-static inline FP_TYPE* hamming(int n) {
-  FP_TYPE* ret = malloc(n * sizeof(FP_TYPE));
-  for(int i = 0; i < n; i ++)
-    ret[i] = 0.54 - 0.46 * cos_3(2 * M_PI * i / (n - 1));
-  return ret;
+CIG_DEF_HANNING(hanning, cos_3);
+CIG_DEF_HANNING(hanning_2, cos_2);
+
+#define CIG_DEF_HAMMING(fname, cosfunc) \
+static inline FP_TYPE* fname(int n) { \
+  FP_TYPE* ret = malloc(n * sizeof(FP_TYPE)); \
+  for(int i = 0; i < n; i ++) \
+    ret[i] = 0.54 * (0.46 - cosfunc(2 * M_PI * i / (n - 1))); \
+  return ret; \
 }
 
-static inline FP_TYPE* mltsine(int n) {
-  FP_TYPE* ret = malloc(n * sizeof(FP_TYPE));
-  for(int i = 0; i < n; i ++)
-    ret[i] = sin_3(M_PI / n * (i + 0.5));
-  return ret;
+CIG_DEF_HAMMING(hamming, cos_3);
+CIG_DEF_HAMMING(hamming_2, cos_2);
+
+#define CIG_DEF_MLTSINE(fname, sinfunc) \
+static inline FP_TYPE* fname(int n) { \
+  FP_TYPE* ret = malloc(n * sizeof(FP_TYPE)); \
+  for(int i = 0; i < n; i ++) \
+    ret[i] = sinfunc(M_PI / n * (i + 0.5)); \
+  return ret; \
 }
 
-static inline FP_TYPE* blackman_harris(int n) {
-  FP_TYPE* ret = malloc(n * sizeof(FP_TYPE));
-  const FP_TYPE a0 = 0.35875;
-  const FP_TYPE a1 = 0.48829;
-  const FP_TYPE a2 = 0.14128;
-  const FP_TYPE a3 = 0.01168;
-  for(int i = 0; i < n; i ++)
-    ret[i] = a0 - a1 * cos_3(2.0 * M_PI * i / n) +
-                  a2 * cos_3(4.0 * M_PI * i / n) -
-                  a3 * cos_3(6.0 * M_PI * i / n);
-  return ret;
+CIG_DEF_MLTSINE(mltsine, sin_3);
+CIG_DEF_MLTSINE(mltsine_2, sin_2);
+
+#define CIG_DEF_BLACKMAN_HARRIS(fname, cosfunc) \
+static inline FP_TYPE* fname(int n) { \
+  FP_TYPE* ret = malloc(n * sizeof(FP_TYPE)); \
+  const FP_TYPE a0 = 0.35875; \
+  const FP_TYPE a1 = 0.48829; \
+  const FP_TYPE a2 = 0.14128; \
+  const FP_TYPE a3 = 0.01168; \
+  for(int i = 0; i < n; i ++) \
+    ret[i] = a0 - a1 * cosfunc(2.0 * M_PI * i / n) + \
+                  a2 * cosfunc(4.0 * M_PI * i / n) - \
+                  a3 * cosfunc(6.0 * M_PI * i / n); \
+  return ret; \
 }
 
-static inline FP_TYPE* blackman(int n) {
-  FP_TYPE* ret = malloc(n * sizeof(FP_TYPE));
-  const FP_TYPE a0 = 0.42;
-  const FP_TYPE a1 = 0.5;
-  const FP_TYPE a2 = 0.08;
-  for(int i = 0; i < n; i ++)
-    ret[i] = a0 - a1 * cos_3(2.0 * M_PI * i / n) +
-                  a2 * cos_3(4.0 * M_PI * i / n);
-  return ret;
+CIG_DEF_BLACKMAN_HARRIS(blackman_harris, cos_3);
+CIG_DEF_BLACKMAN_HARRIS(blackman_harris_2, cos_2);
+
+#define CIG_DEF_BLACKMAN(fname, cosfunc) \
+static inline FP_TYPE* fname(int n) { \
+  FP_TYPE* ret = malloc(n * sizeof(FP_TYPE)); \
+  const FP_TYPE a0 = 0.42; \
+  const FP_TYPE a1 = 0.5; \
+  const FP_TYPE a2 = 0.08; \
+  for(int i = 0; i < n; i ++) \
+    ret[i] = a0 - a1 * cos_3(2.0 * M_PI * i / n) + \
+                  a2 * cos_3(4.0 * M_PI * i / n); \
+  return ret; \
 }
+
+CIG_DEF_BLACKMAN(blackman, cos_3);
+CIG_DEF_BLACKMAN(blackman_2, cos_2);
 
 void cig_fft(FP_TYPE* xr, FP_TYPE* xi, FP_TYPE* yr, FP_TYPE* yi,
   int n, FP_TYPE* buffer, FP_TYPE mode);
@@ -743,25 +763,29 @@ static inline FP_TYPE* melspace(FP_TYPE fmin, FP_TYPE fmax, int n) {
 }
 
 void cig_stft_forward(FP_TYPE* x, int nx, int* center, int* nwin, int nfrm,
-  int nfft, char* window, int subt_mean,
+  int nfft, char* window, int subt_mean, int optlv,
   FP_TYPE* norm_factor, FP_TYPE* weight_factor, FP_TYPE** Xmagn, FP_TYPE** Xphse);
 
 FP_TYPE* cig_stft_backward(FP_TYPE** Xmagn, FP_TYPE** Xphse, int nhop, int nfrm,
   int offset, int hop_factor, int zp_factor, int nfade, FP_TYPE norm_factor, int* ny);
 
-static inline void stft(FP_TYPE* x, int nx, int nhop, int nfrm, int hopfc, int zpfc,
-  FP_TYPE* normfc, FP_TYPE* weightfc, FP_TYPE** Xmagn, FP_TYPE** Xphse) {
-  int* center = malloc(nfrm * sizeof(int));
-  int* nwin = malloc(nfrm * sizeof(int));
-  for(int i = 0; i < nfrm; i ++) {
-    center[i] = nhop * i;
-    nwin[i] = nhop * hopfc;
-  }
-  cig_stft_forward(x, nx, center, nwin, nfrm, nhop * hopfc * zpfc, "blackman", 0,
-    normfc, weightfc, Xmagn, Xphse);
-  free(center);
-  free(nwin);
+#define CIG_DEF_STFT(fname, optlv) \
+static inline void fname(FP_TYPE* x, int nx, int nhop, int nfrm, int hopfc, int zpfc, \
+  FP_TYPE* normfc, FP_TYPE* weightfc, FP_TYPE** Xmagn, FP_TYPE** Xphse) { \
+  int* center = malloc(nfrm * sizeof(int)); \
+  int* nwin = malloc(nfrm * sizeof(int)); \
+  for(int i = 0; i < nfrm; i ++) { \
+    center[i] = nhop * i; \
+    nwin[i] = nhop * hopfc; \
+  } \
+  cig_stft_forward(x, nx, center, nwin, nfrm, nhop * hopfc * zpfc, "blackman", 0, \
+     optlv, normfc, weightfc, Xmagn, Xphse); \
+  free(center); \
+  free(nwin); \
 }
+
+CIG_DEF_STFT(stft, 3);
+CIG_DEF_STFT(stft_2, 2);
 
 static inline FP_TYPE* istft(FP_TYPE** Xmagn, FP_TYPE** Xphse, int nhop, int nfrm,
   int hopfc, int zpfc, FP_TYPE normfc, int* ny) {
