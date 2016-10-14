@@ -529,17 +529,19 @@ void cig_stft_forward(FP_TYPE* x, int nx, int* center, int* nwin, int nfrm,
     FP_TYPE* spec_magn, *spec_phse;
     xfrm = spec_magn = spec_phse = NULL;
     
-    if(norm_factor == NULL && weight_factor == NULL)
-      w = get_window(window, nwin[t]);
+    FP_TYPE* wlocal = w;
+    if(norm_factor == NULL && weight_factor == NULL) {
+      wlocal = get_window(window, nwin[t]);
+    }
 
     xfrm = fetch_frame(x, nx, tn, nwin[t]);
     if(subt_mean) {
       FP_TYPE mean_xfrm = sumfp(xfrm, nwin[t]) / nwin[t];
       for(int i = 0; i < nwin[t]; i ++)
-        xfrm[i] = (xfrm[i] - mean_xfrm) * w[i];
+        xfrm[i] = (xfrm[i] - mean_xfrm) * wlocal[i];
     } else {
       for(int i = 0; i < nwin[t]; i ++)
-        xfrm[i] *= w[i];
+        xfrm[i] *= wlocal[i];
     }
 
     memset(xbuff, 0, nfft * sizeof(FP_TYPE));
@@ -565,7 +567,7 @@ void cig_stft_forward(FP_TYPE* x, int nx, int* center, int* nwin, int nfrm,
 
     free(xfrm);
     if(norm_factor == NULL && weight_factor == NULL)
-      free(w);
+      free(wlocal);
 
 #   ifdef _OPENMP
     free(buff);
