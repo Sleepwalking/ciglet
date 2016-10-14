@@ -440,9 +440,13 @@ FP_TYPE* cig_medfilt(FP_TYPE* x, int nx, int order) {
 }
 
 FP_TYPE* cig_rresample(FP_TYPE* x, int nx, FP_TYPE ratio, int* ny) {
-  *ny = round(nx * ratio);
+  *ny = ratio == 1.0 ? nx : round(nx * ratio);
   FP_TYPE* xlp = x;
   FP_TYPE* y = calloc(*ny, sizeof(FP_TYPE));
+  if(ratio == 1.0) {
+    memcpy(y, x, sizeof(FP_TYPE) * nx);
+    return y;
+  }
 
   if(ratio < 1.0) { // low pass the signal first
     FP_TYPE* h = fir1(32, ratio, "lowpass", "hamming");
