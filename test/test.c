@@ -1,6 +1,11 @@
 #include "../ciglet.h"
 
-int main(void) {
+int noplot = 0;
+
+int main(int argc, char* argv[]) {
+  if(argc >= 2 && ! strcmp(argv[1], "noplot"))
+    noplot = 1;
+
   FP_TYPE* rand1 = white_noise(1, 10000);
   FP_TYPE* rand2 = white_noise(1, 10000);
   printf("corr = %f, mean = %f, median = %f\n", corr(rand1, rand2, 10000),
@@ -15,12 +20,14 @@ int main(void) {
     lfmagnresp[i] = log(lfmagnresp[i]);
   FP_TYPE* lfperiod = lfmodel_period(testlf, 44100, 500);
 
-  figure* lffg = plotopen();
-  plot(lffg, freq, lfmagnresp, 200, 'b');
-  plotclose(lffg);
-  lffg = plotopen();
-  plot(lffg, NULL, lfperiod, 500, 'b');
-  plotclose(lffg);
+  if(! noplot) {
+    figure* lffg = plotopen();
+    plot(lffg, freq, lfmagnresp, 200, 'b');
+    plotclose(lffg);
+    lffg = plotopen();
+    plot(lffg, NULL, lfperiod, 500, 'b');
+    plotclose(lffg);
+  }
   free(freq);
   free(lfmagnresp);
   free(lfperiod);
@@ -55,9 +62,19 @@ int main(void) {
   for(int i = 0; i < nfrm; i ++)
     Xmfcc[i] = be2cc(Xmfb[i], 36, 12, 0);
 
-  figure* fg = plotopen();
-  imagesc(fg, Xmfcc, nfrm, 12);
-  plotclose(fg);
+  figure* fg = NULL;
+  if(! noplot) {
+    fg = plotopen();
+    imagesc(fg, Xmfcc, nfrm, 12);
+    plotclose(fg);
+  }
+  printf("Selected content of Xmfcc:\n");
+  for(int i = 0; i < nfrm; i += nfrm / 5) {
+    for(int j = 0; j < 12; j += 3)
+      printf("%10f ", Xmfcc[i][j]);
+    puts("");
+  }
+
   FP_TYPE** Xmmf = calloc(nfft / 2 + 1, sizeof(FP_TYPE*));
   FP_TYPE** Xmtr = transpose(Xm, nfrm, nfft / 2 + 1, sizeof(FP_TYPE));
   for(int i = 0; i < nfft / 2 + 1; i ++) {
@@ -87,17 +104,23 @@ int main(void) {
 
   y = istft(Xm2, Xp, nhop, nfrm, 8, 1, normfc, & ny);
   wavwrite(y, ny, fs, nbit, "test/out-stft-wow.wav");
+  for(int i = 0; i < ny; i += ny / 20)
+    printf("%10f ", y[i]);
+  puts("");
   free(y);
   free2d(Xm2, nfrm);
+  printf("Selected content of y:\n");
 
   FP_TYPE** C = malloc2d(nfrm, nfft / 2 + 1, sizeof(FP_TYPE));
   for(int i = 0; i < nfrm; i ++) {
     free(spec2env(Xm[i], nfft, fs, 250.0, C[i]));
   }
   FP_TYPE** Xm3 = cegm2spgm(C, nfrm, nfft, nfft / 2 + 1);
-  fg = plotopen();
-  imagesc(fg, Xm3, nfrm, nfft / 2 + 1);
-  plotclose(fg);
+  if(! noplot) {
+    fg = plotopen();
+    imagesc(fg, Xm3, nfrm, nfft / 2 + 1);
+    plotclose(fg);
+  }
 
   FP_TYPE* Xm3_flattened = flatten(Xm3, nfrm, nfft / 2 + 1, sizeof(FP_TYPE));
   FP_TYPE Xm3median = medianfp(Xm3_flattened, nfrm * (nfft / 2 + 1));

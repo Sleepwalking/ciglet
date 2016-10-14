@@ -1,7 +1,7 @@
 CC = $(CROSS)gcc
 LINK = $(CROSS)gcc
 AR = $(CROSS)ar
-CFLAGS = -D_POSIX_C_SOURCE=2 -DFP_TYPE=float -Og -g -std=c99 -Wall -fPIC $(CFLAGSEXT)
+CFLAGS = -D_POSIX_C_SOURCE=2 -DFP_TYPE=float -Og -g -std=c99 -Wall -fPIC $(CFLAGSEXT) -fopenmp
 ARFLAGS = -rv
 OBJS = ciglet.o fftsg.o fastmedian.o wavfile.o
 
@@ -15,7 +15,7 @@ single-file: single-file/ciglet.c single-file/ciglet.h
 
 ciglet-test: libciglet.a test/test.c
 	$(CC) $(CFLAGS) test/test.c libciglet.a -o ciglet-test -lm
-	./ciglet-test
+	./ciglet-test noplot
 
 ciglet-test-fft: libciglet.a test/test-fft.c
 	$(CC) $(CFLAGS) test/test-fft.c libciglet.a -o ciglet-test-fft -lm

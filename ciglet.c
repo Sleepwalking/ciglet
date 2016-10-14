@@ -489,10 +489,13 @@ void cig_stft_forward(FP_TYPE* x, int nx, int* center, int* nwin, int nfrm,
   int nfft, char* window, int subt_mean,
   FP_TYPE* norm_factor, FP_TYPE* weight_factor, FP_TYPE** Xmagn, FP_TYPE** Xphse) {
 
-  FP_TYPE* xbuff = calloc(nfft, sizeof(FP_TYPE));
-  FP_TYPE* ybuffr = calloc(nfft, sizeof(FP_TYPE));
-  FP_TYPE* ybuffi = calloc(nfft, sizeof(FP_TYPE));
-  FP_TYPE* fftbuff = calloc(nfft * 2, sizeof(FP_TYPE));
+# ifndef _OPENMP
+  FP_TYPE* buff = calloc(nfft * 5, sizeof(FP_TYPE));
+  FP_TYPE* fftbuff = buff;
+  FP_TYPE* xbuff = buff + nfft * 2;
+  FP_TYPE* ybuffr = buff + nfft * 3;
+  FP_TYPE* ybuffi = buff + nfft * 4;
+# endif
 
   FP_TYPE* w = NULL;
   if(norm_factor != NULL || weight_factor != NULL)
@@ -509,7 +512,17 @@ void cig_stft_forward(FP_TYPE* x, int nx, int* center, int* nwin, int nfrm,
       *norm_factor += w[i];
   }
 
+# ifdef _OPENMP
+# pragma omp parallel for
+# endif
   for(int t = 0; t < nfrm; t ++) {
+#   ifdef _OPENMP
+    FP_TYPE* buff = calloc(nfft * 5, sizeof(FP_TYPE));
+    FP_TYPE* fftbuff = buff;
+    FP_TYPE* xbuff = buff + nfft * 2;
+    FP_TYPE* ybuffr = buff + nfft * 3;
+    FP_TYPE* ybuffi = buff + nfft * 4;
+#   endif
     int tn = center[t];
     
     FP_TYPE* xfrm;
@@ -553,14 +566,17 @@ void cig_stft_forward(FP_TYPE* x, int nx, int* center, int* nwin, int nfrm,
     free(xfrm);
     if(norm_factor == NULL && weight_factor == NULL)
       free(w);
+
+#   ifdef _OPENMP
+    free(buff);
+#   endif
   }
   
   if(norm_factor != NULL || weight_factor != NULL)
     free(w);
-  free(fftbuff);
-  free(xbuff);
-  free(ybuffr);
-  free(ybuffi);
+# ifndef _OPENMP
+  free(buff);
+# endif
 }
 
 FP_TYPE* cig_stft_backward(FP_TYPE** Xmagn, FP_TYPE** Xphse, int nhop, int nfrm,
@@ -572,12 +588,26 @@ FP_TYPE* cig_stft_backward(FP_TYPE** Xmagn, FP_TYPE** Xphse, int nhop, int nfrm,
   *ny = nhop * nfrm + offset;
   FP_TYPE* y = calloc(*ny, sizeof(FP_TYPE));
   
-  FP_TYPE* xbuffr = calloc(nfft, sizeof(FP_TYPE));
-  FP_TYPE* xbuffi = calloc(nfft, sizeof(FP_TYPE));
-  FP_TYPE* ybuff = calloc(nfft, sizeof(FP_TYPE));
-  FP_TYPE* fftbuff = calloc(nfft * 2, sizeof(FP_TYPE));
+# ifndef _OPENMP
+  FP_TYPE* buff = calloc(nfft * 5, sizeof(FP_TYPE));
+  FP_TYPE* fftbuff = buff;
+  FP_TYPE* ybuff = buff + nfft * 2;
+  FP_TYPE* xbuffr = buff + nfft * 3;
+  FP_TYPE* xbuffi = buff + nfft * 4;
+# endif
   
+# ifdef _OPENMP
+# pragma omp parallel for
+# endif
   for(int t = 0; t < nfrm; t ++) {
+#   ifdef _OPENMP
+    FP_TYPE* buff = calloc(nfft * 5, sizeof(FP_TYPE));
+    FP_TYPE* fftbuff = buff;
+    FP_TYPE* ybuff = buff + nfft * 2;
+    FP_TYPE* xbuffr = buff + nfft * 3;
+    FP_TYPE* xbuffi = buff + nfft * 4;
+#   endif
+
     int tn = t * nhop + offset;
     
     for(int i = 0; i < nfft / 2 + 1; i ++) {
@@ -594,6 +624,9 @@ FP_TYPE* cig_stft_backward(FP_TYPE** Xmagn, FP_TYPE** Xphse, int nhop, int nfrm,
       yfrm[nfft - i - 1] *= wfade[i];
     }
     
+#   ifdef _OPENMP
+#   pragma omp critical
+#   endif
     for(int i = 0; i < nfft; i ++) {
       int idx = tn + i - nfft / 2;
       if(idx >= 0 && idx < *ny) {
@@ -602,13 +635,15 @@ FP_TYPE* cig_stft_backward(FP_TYPE** Xmagn, FP_TYPE** Xphse, int nhop, int nfrm,
     }
     
     free(yfrm);
+#   ifdef _OPENMP
+    free(buff);
+#   endif
   }
   
   free(wfade);
-  free(fftbuff);
-  free(ybuff);
-  free(xbuffr);
-  free(xbuffi);
+# ifndef _OPENMP
+  free(buff);
+# endif
   return y;
 }
 
@@ -701,6 +736,9 @@ void cig_delete_filterbank(filterbank* dst) {
 FP_TYPE** cig_filterbank_spectrogram(filterbank* fbank, FP_TYPE** S, int nfrm,
   int nfft, int fs, int crtenergy) {
   FP_TYPE** X = malloc2d(nfrm, fbank -> nchannel, sizeof(FP_TYPE));
+# ifdef _OPENMP
+# pragma omp parallel for
+# endif
   for(int i = 0; i < nfrm; i ++) {
     for(int j = 0; j < fbank -> nchannel; j ++) {
       X[i][j] = 0;
@@ -893,4 +931,3 @@ FP_TYPE* cig_lfmodel_period(lfmodel model, int fs, int n) {
   }
   return y;
 }
-
