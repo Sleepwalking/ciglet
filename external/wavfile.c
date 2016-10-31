@@ -17,6 +17,8 @@
 //   Add 8bit/24bit/32bit PCM support for wavwrite.
 // Sept 25, 2015
 //   Add MinGW support.
+// Oct 31, 2016
+//   Fix bug in detecting float point format.
 //-----------------------------------------------------------------------------
 
 #include <math.h>
@@ -84,7 +86,7 @@ static bool GetParameters(FILE *fp, int *fs, int *nbit, int *wav_length, int *fo
   }
   if (1 == data_check[0])
     *format_tag = FORMAT_PCM;
-  else if (3 == data_check[1])
+  else if (3 == data_check[0])
     *format_tag = FORMAT_IEEE_FLOAT;
   else
     *format_tag = FORMAT_EXT;
