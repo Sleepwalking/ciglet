@@ -19,6 +19,8 @@
 //   Add MinGW support.
 // Oct 31, 2016
 //   Fix bug in detecting float point format.
+// Nov 1, 2016
+//   Expose API operating directly on file pointers.
 //-----------------------------------------------------------------------------
 
 #include <math.h>
@@ -161,13 +163,7 @@ static bool GetParameters(FILE *fp, int *fs, int *nbit, int *wav_length, int *fo
   return true;
 }
 
-void wavwrite(FP_TYPE* x, int x_length, int fs, int nbit, char* filename) {
-  FILE* fp = fopen(filename, "wb");
-  if (fp == NULL) {
-    printf("File cannot be opened.\n");
-    return;
-  }
-
+void wavwrite_fp(FP_TYPE* x, int x_length, int fs, int nbit, FILE* fp) {
   if (nbit % 8 != 0 || nbit > 32) {
     printf("Unsupported bit per sample.\n");
     return;
@@ -238,7 +234,15 @@ void wavwrite(FP_TYPE* x, int x_length, int fs, int nbit, char* filename) {
     tmp_signal = (int32_t)(MyMax(-2147483648, MyMin(2147483647, (int)(x[i] * 2147483647))));
     fwrite(&tmp_signal, 4, 1, fp);
   }
+}
 
+void wavwrite(FP_TYPE* x, int x_length, int fs, int nbit, char* filename) {
+  FILE* fp = fopen(filename, "wb");
+  if (fp == NULL) {
+    printf("File cannot be opened.\n");
+    return;
+  }
+  wavwrite_fp(x, x_length, fs, nbit, fp);
   fclose(fp);
 }
 
@@ -248,13 +252,7 @@ typedef union {
   double num_double;
 } char_float_double;
 
-FP_TYPE* wavread(char* filename, int* fs, int* nbit, int* wav_length) {
-  FILE* fp = fopen(filename, "rb");
-  if (NULL == fp) {
-    printf("File not found.\n");
-    return NULL;
-  }
-
+FP_TYPE* wavread_fp(FILE* fp, int* fs, int* nbit, int* wav_length) {
   int format_tag = 0;
   int nchannel = 1;
   if (GetParameters(fp, fs, nbit, wav_length, & format_tag, & nchannel) == false) {
@@ -297,7 +295,16 @@ FP_TYPE* wavread(char* filename, int* fs, int* nbit, int* wav_length) {
       }
     }
   }
-  fclose(fp);
   return waveform;
 }
 
+FP_TYPE* wavread(char* filename, int* fs, int* nbit, int* wav_length) {
+  FILE* fp = fopen(filename, "rb");
+  if (NULL == fp) {
+    printf("File not found.\n");
+    return NULL;
+  }
+  FP_TYPE* ret = wavread_fp(fp, fs, nbit, wav_length);
+  fclose(fp);
+  return ret;
+}

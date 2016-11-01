@@ -307,6 +307,8 @@ void** cig_transpose(void** ptr, size_t m, size_t n, size_t size);
 
 FP_TYPE* wavread(char* filename, int* fs, int* nbit, int* nx);
 void wavwrite(FP_TYPE* y, int ny, int fs, int nbit, char* filename);
+FP_TYPE* wavread_fp(FILE* fin, int* fs, int* nbit, int* nx);
+void wavwrite_fp(FP_TYPE* y, int ny, int fs, int nbit, FILE* fout);
 
 // DSP functions
 
