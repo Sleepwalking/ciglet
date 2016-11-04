@@ -364,7 +364,7 @@ CIG_DEF_HANNING(hanning_2, cos_2);
 static inline FP_TYPE* fname(int n) { \
   FP_TYPE* ret = malloc(n * sizeof(FP_TYPE)); \
   for(int i = 0; i < n; i ++) \
-    ret[i] = 0.54 * (0.46 - cosfunc(2 * M_PI * i / (n - 1))); \
+    ret[i] = 0.54 - 0.46 * cosfunc(2 * M_PI * i / (n - 1)); \
   return ret; \
 }
 
