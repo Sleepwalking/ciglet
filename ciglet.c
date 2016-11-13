@@ -501,6 +501,63 @@ FP_TYPE cig_fzero(fpe_one_to_one func, FP_TYPE xmin, FP_TYPE xmax, void* env) {
   return fzero_(func, xmin, xmax, 0, env);
 }
 
+// Pearson Correlation Coefficient
+static FP_TYPE corr_kernel_acf(
+  FP_TYPE* x, FP_TYPE* xx, double* x1, double* x2, int w, int d) {
+  FP_TYPE a = 0;
+  FP_TYPE b = 0;
+  FP_TYPE sumx = x1[w] - x1[0];
+  FP_TYPE sumxd = x1[w + d] - x1[d];
+  FP_TYPE sumx2 = x2[w] - x2[0];
+  FP_TYPE sumx2d = x2[w + d] - x2[d];
+  for(int i = 0; i < w; i ++)
+    a += x[i] * x[i + d];
+  a *= w;
+  a -= sumx * sumxd;
+  b = (w * sumx2 - sumx * sumx) * (w * sumx2d - sumxd * sumxd);
+  FP_TYPE r = a / sqrt(b);
+  r = max(r, 0); r = min(r, 1);
+  return r;
+}
+
+static FP_TYPE corr_kernel_amdf(
+  FP_TYPE* x, FP_TYPE* xx, double* x1, double* x2, int w, int d) {
+  FP_TYPE a = 0;
+  for(int i = 0; i < w; i ++)
+    a += fabs(x[i] - x[i + d]);
+  return a;
+}
+
+void cig_correlogram(FP_TYPE* x, int nx, int* center, int* nwin, int nfrm,
+  int max_period, int method, FP_TYPE** R) {
+  double* x1 = calloc(nx + 1, sizeof(double)); // integrate x[i]
+  double* x2 = calloc(nx + 1, sizeof(double)); // integrate x^2[i]
+  FP_TYPE* xx = calloc(nx, sizeof(FP_TYPE));   // x^2[i]
+  for(int i = 0; i < nx; i ++)
+    x1[i + 1] = x1[i] + (double)x[i];
+  for(int i = 0; i < nx; i ++)
+    x2[i + 1] = x2[i] + (double)x[i] * (double)x[i];
+  for(int i = 0; i < nx; i ++)
+    xx[i] = x[i] * x[i];
+  for(int i = 0; i < nfrm; i ++) {
+    int t = center[i];
+    int w = nwin[i];
+    t = max(0, t);
+    t = min(nx - 1, t);
+    for(int d = 0; d < max_period; d ++)
+      if(t + w + d < nx) {
+        if(method == CIG_CORR_ACF)
+          R[i][d] = corr_kernel_acf(x + t, xx + t, x1 + t, x2 + t, w, d);
+        else if(method == CIG_CORR_AMDF)
+          R[i][d] = corr_kernel_amdf(x + t, xx + t, x1 + t, x2 + t, w, d);
+      } else
+        R[i][d] = 0;
+  }
+  free(x1);
+  free(x2);
+  free(xx);
+}
+
 void cig_stft_forward(FP_TYPE* x, int nx, int* center, int* nwin, int nfrm,
   int nfft, char* window, int subt_mean, int optlv,
   FP_TYPE* norm_factor, FP_TYPE* weight_factor, FP_TYPE** Xmagn, FP_TYPE** Xphse) {

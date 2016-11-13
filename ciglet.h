@@ -18,7 +18,7 @@
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
 static inline FP_TYPE linterp(FP_TYPE a, FP_TYPE b, FP_TYPE ratio) {
-    return a + (b - a) * ratio;
+  return a + (b - a) * ratio;
 }
 
 /*
@@ -763,6 +763,13 @@ static inline FP_TYPE* melspace(FP_TYPE fmin, FP_TYPE fmax, int n) {
     freq[i] = mel2freq((FP_TYPE)i / n * (mmax - mmin) + mmin);
   return freq;
 }
+
+#define CIG_CORR_ACF    0
+#define CIG_CORR_AMDF   1
+
+// size of R: nfrm x max_period
+void cig_correlogram(FP_TYPE* x, int nx, int* center, int* nwin, int nfrm,
+  int max_period, int method, FP_TYPE** R);
 
 void cig_stft_forward(FP_TYPE* x, int nx, int* center, int* nwin, int nfrm,
   int nfft, char* window, int subt_mean, int optlv,
