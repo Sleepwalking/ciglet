@@ -558,6 +558,23 @@ void cig_correlogram(FP_TYPE* x, int nx, int* center, int* nwin, int nfrm,
   free(xx);
 }
 
+FP_TYPE** cig_invcrgm(FP_TYPE** R, int nfrm, int max_period, int fs, FP_TYPE* faxis, int nf) {
+  FP_TYPE** Ri = malloc2d(nfrm, nf, sizeof(FP_TYPE*));
+  FP_TYPE* Raxis = linspace(0, max_period - 1, max_period);
+  FP_TYPE* invmap = calloc(nf, sizeof(FP_TYPE));
+  for(int i = 0; i < nf; i ++)
+    invmap[i] = fs / faxis[nf - i - 1];
+  for(int i = 0; i < nfrm; i ++) {
+    FP_TYPE* rflip = interp1(Raxis, R[i], max_period, invmap, nf);
+    for(int j = 0; j < nf; j ++)
+      Ri[i][j] = rflip[nf - j - 1];
+    free(rflip);
+  }
+  free(invmap);
+  free(Raxis);
+  return Ri;
+}
+
 void cig_stft_forward(FP_TYPE* x, int nx, int* center, int* nwin, int nfrm,
   int nfft, char* window, int subt_mean, int optlv,
   FP_TYPE* norm_factor, FP_TYPE* weight_factor, FP_TYPE** Xmagn, FP_TYPE** Xphse) {

@@ -2,7 +2,7 @@
 
 int noplot = 0;
 
-static void test_correlogram(int noplot, FP_TYPE* x, int nx) {
+static void test_correlogram(int noplot, FP_TYPE* x, int nx, int fs) {
   int nhop = 128;
   int nfrm = nx / nhop;
   int max_period = 1024;
@@ -14,12 +14,16 @@ static void test_correlogram(int noplot, FP_TYPE* x, int nx) {
   }
   FP_TYPE** R = malloc2d(nfrm, 1024, sizeof(FP_TYPE));
   cig_correlogram(x, nx, center, nwin, nfrm, max_period, CIG_CORR_ACF, R);
+  FP_TYPE* faxis = linspace(0, 999, 1000);
+  FP_TYPE** Ri = cig_invcrgm(R, nfrm, max_period, fs, faxis, 1000);
   if(! noplot) {
     figure* fig = plotopen();
-    imagesc(fig, R, nfrm, max_period);
+    imagesc(fig, Ri, nfrm, 1000);
     plotclose(fig);
   }
+  free2d(Ri, nfrm);
   free2d(R, nfrm);
+  free(faxis);
   free(center); free(nwin);
 }
 
@@ -68,7 +72,7 @@ int main(int argc, char* argv[]) {
   wavwrite(y2c, ny, fs * 1.5, nbit, "test/out-resample-mavg.wav");
   free(y2c);
 
-  test_correlogram(noplot, x, nx);
+  test_correlogram(noplot, x, nx, fs);
 
   int nhop = 256;
   int nfft = 2048;

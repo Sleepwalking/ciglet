@@ -771,6 +771,9 @@ static inline FP_TYPE* melspace(FP_TYPE fmin, FP_TYPE fmax, int n) {
 void cig_correlogram(FP_TYPE* x, int nx, int* center, int* nwin, int nfrm,
   int max_period, int method, FP_TYPE** R);
 
+// convert y axis of correlogram from period to frequency
+FP_TYPE** cig_invcrgm(FP_TYPE** R, int nfrm, int max_period, int fs, FP_TYPE* faxis, int nf);
+
 void cig_stft_forward(FP_TYPE* x, int nx, int* center, int* nwin, int nfrm,
   int nfft, char* window, int subt_mean, int optlv,
   FP_TYPE* norm_factor, FP_TYPE* weight_factor, FP_TYPE** Xmagn, FP_TYPE** Xphse);
