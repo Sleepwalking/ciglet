@@ -2,7 +2,55 @@
 
 int noplot = 0;
 
-static void test_correlogram(int noplot, FP_TYPE* x, int nx, int fs) {
+static void test_statistics() {
+  FP_TYPE* rand1 = white_noise(1, 10000);
+  FP_TYPE* rand2 = white_noise(1, 10000);
+  printf("corr = %f, mean = %f, median = %f\n", corr(rand1, rand2, 10000),
+    meanfp(rand1, 10000), medianfp(rand1, 10000));
+  free(rand1);
+  free(rand2);
+}
+
+static void test_lf() {
+  lfmodel testlf = lfmodel_from_rd(1, 0.008, 0.3);
+  FP_TYPE* freq = linspace(0, 6000, 200);
+  FP_TYPE* lfmagnresp = lfmodel_spectrum(testlf, freq, 200, NULL);
+  for(int i = 0; i < 200; i ++)
+    lfmagnresp[i] = log(lfmagnresp[i]);
+  FP_TYPE* lfperiod = lfmodel_period(testlf, 44100, 500);
+
+  if(! noplot) {
+    figure* lffg = plotopen();
+    plot(lffg, freq, lfmagnresp, 200, 'b');
+    plotclose(lffg);
+    lffg = plotopen();
+    plot(lffg, NULL, lfperiod, 500, 'b');
+    plotclose(lffg);
+  }
+  free(freq);
+  free(lfmagnresp);
+  free(lfperiod);
+}
+
+static FP_TYPE* test_wav(int* fs, int* nx, int* nbit) {
+  int ny;
+  FP_TYPE* x = wavread("test/in2.wav", fs, nbit, nx);
+  FP_TYPE* y = rresample(x, *nx, 1.5, & ny);
+  FP_TYPE* y2 = moving_avg(y, ny, 10);
+  FP_TYPE* y2d = diff(y2, ny);
+  FP_TYPE* y2c = cumsum(y2d, ny);
+  free(y);
+  free(y2);
+  free(y2d);
+
+  for(int i = 0; i < ny; i ++)
+    y2c[i] += randn(0, 0.01 * 0.01);
+  wavwrite(y2c, ny, *fs * 1.5, *nbit, "test/out-resample-mavg.wav");
+  free(y2c);
+  return x;
+}
+
+static void test_correlogram(FP_TYPE* x, int nx, int fs) {
   int nhop = 128;
   int nfrm = nx / nhop;
   int max_period = 1024;
@@ -27,53 +75,7 @@ static void test_correlogram(int noplot, FP_TYPE* x, int nx, int fs) {
   free(center); free(nwin);
 }
 
-int main(int argc, char* argv[]) {
-  if(argc >= 2 && ! strcmp(argv[1], "noplot"))
-    noplot = 1;
-
-  FP_TYPE* rand1 = white_noise(1, 10000);
-  FP_TYPE* rand2 = white_noise(1, 10000);
-  printf("corr = %f, mean = %f, median = %f\n", corr(rand1, rand2, 10000),
-    meanfp(rand1, 10000), medianfp(rand1, 10000));
-  free(rand1);
-  free(rand2);
-
-  lfmodel testlf = lfmodel_from_rd(1, 0.008, 0.3);
-  FP_TYPE* freq = linspace(0, 6000, 200);
-  FP_TYPE* lfmagnresp = lfmodel_spectrum(testlf, freq, 200, NULL);
-  for(int i = 0; i < 200; i ++)
-    lfmagnresp[i] = log(lfmagnresp[i]);
-  FP_TYPE* lfperiod = lfmodel_period(testlf, 44100, 500);
-
-  if(! noplot) {
-    figure* lffg = plotopen();
-    plot(lffg, freq, lfmagnresp, 200, 'b');
-    plotclose(lffg);
-    lffg = plotopen();
-    plot(lffg, NULL, lfperiod, 500, 'b');
-    plotclose(lffg);
-  }
-  free(freq);
-  free(lfmagnresp);
-  free(lfperiod);
-
-  int fs, nbit, nx, ny;
-  FP_TYPE* x = wavread("test/in2.wav", & fs, & nbit, & nx);
-  FP_TYPE* y = rresample(x, nx, 1.5, & ny);
-  FP_TYPE* y2 = moving_avg(y, ny, 10);
-  FP_TYPE* y2d = diff(y2, ny);
-  FP_TYPE* y2c = cumsum(y2d, ny);
-  free(y);
-  free(y2);
-  free(y2d);
-
-  for(int i = 0; i < ny; i ++)
-    y2c[i] += randn(0, 0.01 * 0.01);
-  wavwrite(y2c, ny, fs * 1.5, nbit, "test/out-resample-mavg.wav");
-  free(y2c);
-
-  test_correlogram(noplot, x, nx, fs);
-
+static void test_spectral(FP_TYPE* x, int nx, int fs, int nbit) {
   int nhop = 256;
   int nfft = 2048;
   int nfrm = round(nx / nhop);
@@ -81,7 +83,6 @@ int main(int argc, char* argv[]) {
   FP_TYPE** Xm = malloc2d(nfrm, nfft / 2 + 1, sizeof(FP_TYPE));
   FP_TYPE** Xp = malloc2d(nfrm, nfft / 2 + 1, sizeof(FP_TYPE));
   stft(x, nx, nhop, nfrm, 8, 1, & normfc, NULL, Xm, Xp);
-  free(x);
 
   filterbank* mfbank = create_melfilterbank(nfft / 2 + 1, fs / 2, 36, 50, 8000);
   FP_TYPE** Xmfb = filterbank_spgm(mfbank, Xm, nfrm, nfft, fs, 0);
@@ -95,6 +96,7 @@ int main(int argc, char* argv[]) {
     imagesc(fg, Xmfcc, nfrm, 12);
     plotclose(fg);
   }
+
   printf("Selected content of Xmfcc:\n");
   for(int i = 0; i < nfrm; i += nfrm / 5) {
     for(int j = 0; j < 12; j += 3)
@@ -129,7 +131,8 @@ int main(int argc, char* argv[]) {
       Xm2[i][j] = 0;
   }
 
-  y = istft(Xm2, Xp, nhop, nfrm, 8, 1, normfc, & ny);
+  int ny;
+  FP_TYPE* y = istft(Xm2, Xp, nhop, nfrm, 8, 1, normfc, & ny);
   wavwrite(y, ny, fs, nbit, "test/out-stft-wow.wav");
   for(int i = 0; i < ny; i += ny / 20)
     printf("%10f ", y[i]);
@@ -162,5 +165,21 @@ int main(int argc, char* argv[]) {
   free2d(Xm3, nfrm); free2d(Xm4, nfrm); free2d(C, nfrm);
 
   free2d(Xm, nfrm); free2d(Xp, nfrm);
+}
+
+int main(int argc, char* argv[]) {
+  if(argc >= 2 && ! strcmp(argv[1], "noplot"))
+    noplot = 1;
+  
+  test_statistics();
+  test_lf();
+
+  int fs, nx, nbit;
+  FP_TYPE* x = test_wav(& fs, & nx, & nbit);
+
+  test_correlogram(x, nx, fs);
+  test_spectral(x, nx, fs, nbit);
+
+  free(x);
   return 0;
 }
