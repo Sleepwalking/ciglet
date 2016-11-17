@@ -34,7 +34,7 @@ static void test_lf() {
 
 static FP_TYPE* test_wav(int* fs, int* nx, int* nbit) {
   int ny;
-  FP_TYPE* x = wavread("test/in2.wav", fs, nbit, nx);
+  FP_TYPE* x = wavread("test/in.wav", fs, nbit, nx);
   FP_TYPE* y = rresample(x, *nx, 1.5, & ny);
   FP_TYPE* y2 = moving_avg(y, ny, 10);
   FP_TYPE* y2d = diff(y2, ny);
@@ -48,6 +48,49 @@ static FP_TYPE* test_wav(int* fs, int* nx, int* nbit) {
   wavwrite(y2c, ny, *fs * 1.5, *nbit, "test/out-resample-mavg.wav");
   free(y2c);
   return x;
+}
+
+static void test_lpc(FP_TYPE* x, int nx, int fs) {
+  int nhop = 256;
+  int nfft = 1024;
+  int nfrm = round(nx / nhop);
+  int order = 13;
+  FP_TYPE normfc = 0;
+  FP_TYPE** Xm = malloc2d(nfrm, nfft / 2 + 1, sizeof(FP_TYPE));
+  stft(x, nx, nhop, nfrm, 4, 1, & normfc, NULL, Xm, NULL);
+
+  FP_TYPE* faxis = linspace(0, fs / 2, nfft / 2 + 1);
+  FP_TYPE* faxis_warp = linspace(0, 5500, nfft / 2 + 1);
+  FP_TYPE* buffer = malloc(nfft * 2 * sizeof(FP_TYPE));
+  for(int i = 0; i < nfrm; i ++) {
+    FP_TYPE* Xwarp = interp1(faxis, Xm[i], nfft / 2 + 1, faxis_warp, nfft / 2 + 1);
+    FP_TYPE* Xsqr = malloc(nfft * sizeof(FP_TYPE));
+    FP_TYPE* R = malloc(nfft * sizeof(FP_TYPE));
+    for(int j = 0; j < nfft / 2 + 1; j ++)
+      Xsqr[j] = Xwarp[j] * Xwarp[j];
+    free(Xwarp);
+    complete_symm(Xsqr, nfft);
+    ifft(Xsqr, NULL, R, NULL, nfft, buffer);
+
+    FP_TYPE* a = cig_levinson(R, order);
+
+    FP_TYPE g = lpgain(a, R, order);
+    FP_TYPE* S = lpspec(a, g, order, nfft);
+    for(int j = 0; j < nfft / 2 + 1; j ++)
+      Xm[i][j] = log(S[j]);
+    free(S);
+    free(a);
+    free(Xsqr); free(R);
+  }
+  if(! noplot) {
+    figure* fig = plotopen();
+    imagesc(fig, Xm, nfrm, nfft / 2 + 1);
+    plotclose(fig);
+  }
+  free(faxis);
+  free(faxis_warp);
+  free2d(Xm, nfft / 2 + 1);
+  free(buffer);
 }
 
 static void test_correlogram(FP_TYPE* x, int nx, int fs) {
@@ -171,14 +214,15 @@ int main(int argc, char* argv[]) {
   if(argc >= 2 && ! strcmp(argv[1], "noplot"))
     noplot = 1;
   
-  test_statistics();
-  test_lf();
+  //test_statistics();
+  //test_lf();
 
   int fs, nx, nbit;
   FP_TYPE* x = test_wav(& fs, & nx, & nbit);
 
-  test_correlogram(x, nx, fs);
-  test_spectral(x, nx, fs, nbit);
+  test_lpc(x, nx, fs);
+  //test_correlogram(x, nx, fs);
+  //test_spectral(x, nx, fs, nbit);
 
   free(x);
   return 0;

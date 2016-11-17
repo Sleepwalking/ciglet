@@ -548,13 +548,15 @@ static inline FP_TYPE* rceps(FP_TYPE* S, int nfft) {
   return realloc(C, nfft * sizeof(FP_TYPE));
 }
 
-static inline FP_TYPE* irceps(FP_TYPE* C, int nfft) {
+static inline FP_TYPE* irceps(FP_TYPE* C, int n, int nfft) {
   FP_TYPE* buff = malloc(nfft * 4 * sizeof(FP_TYPE));
   FP_TYPE* S = buff;
   FP_TYPE* C_symm = buff + nfft;
   FP_TYPE* fftbuff = buff + nfft * 2;
-  for(int i = 0; i < nfft / 2 + 1; i ++)
+  for(int i = 0; i < n; i ++)
     C_symm[i] = C[i];
+  for(int i = n; i < nfft / 2 + 1; i ++)
+    C_symm[i] = 0;
   complete_symm(C_symm, nfft);
   fft(C_symm, NULL, S, NULL, nfft, fftbuff);
   return realloc(S, nfft * sizeof(FP_TYPE));
@@ -575,6 +577,37 @@ static inline FP_TYPE* minphase(FP_TYPE* S, int nfft) {
     C[i] = 0.0;
   fft(C, NULL, NULL, S_symm, nfft, fftbuff);
   return realloc(S_symm, nfft * sizeof(FP_TYPE));
+}
+
+// R: autocorrelation; returns n sized array of AR coefficients
+FP_TYPE* cig_levinson(FP_TYPE* R, int n);
+
+static inline FP_TYPE* levinson(FP_TYPE* R, int n) {
+  return cig_levinson(R, n);
+}
+
+static inline FP_TYPE lpgain(FP_TYPE* a, FP_TYPE* R, int n) {
+  FP_TYPE g = 0;
+  for(int i = 0; i < n; i ++)
+    g += a[i] * R[i];
+  return sqrt(g);
+}
+
+static inline FP_TYPE* lpspec(FP_TYPE* a, FP_TYPE gain, int n, int nfft) {
+  FP_TYPE* buff = malloc(nfft * 5 * sizeof(FP_TYPE));
+  FP_TYPE* Sr = buff;
+  FP_TYPE* Si = buff + nfft;
+  FP_TYPE* A = buff + nfft * 2;
+  FP_TYPE* fftbuff = buff + nfft * 3;
+  for(int i = 0; i < n; i ++)
+    A[i] = a[i];
+  for(int i = n; i < nfft; i ++)
+    A[i] = 0;
+  fft(A, NULL, Sr, Si, nfft, fftbuff);
+  for(int i = 0; i < nfft; i ++)
+    Sr[i] = gain / sqrt(Sr[i] * Sr[i] + Si[i] * Si[i]);
+  Sr = realloc(Sr, nfft * sizeof(FP_TYPE));
+  return Sr;
 }
 
 FP_TYPE* cig_winfir(int order, FP_TYPE cutoff, FP_TYPE cutoff2,

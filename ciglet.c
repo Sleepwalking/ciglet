@@ -221,6 +221,29 @@ void cig_idft(FP_TYPE* xr, FP_TYPE* xi, FP_TYPE* yr, FP_TYPE* yi, int n) {
   }
 }
 
+FP_TYPE* cig_levinson(FP_TYPE* R, int n) {
+  FP_TYPE* a = calloc(n, sizeof(FP_TYPE));
+  FP_TYPE* a_new = calloc(n, sizeof(FP_TYPE));
+  FP_TYPE k = -R[1] / (R[0] * 1.000001);
+  a[0] = 1.0;
+  a[1] = k;
+  FP_TYPE gain = R[0] * 1.000001 * (1 - k * k);
+  for(int i = 2; i < n; i ++) {
+    FP_TYPE s = R[i];
+    for(int j = 1; j < i; j ++)
+      s += R[j] * a[i - j];
+    k = -s / gain;
+    for(int j = 1; j < i; j ++)
+      a_new[j] = a[j] + k * a[i - j];
+    for(int j = 1; j < i; j ++)
+      a[j] = a_new[j];
+    a[i] = k;
+    gain *= 1.0 - k * k;
+  }
+  free(a_new);
+  return a;
+}
+
 FP_TYPE* cig_winfir(int order, FP_TYPE cutoff, FP_TYPE cutoff2, char* type, char* window) {
   FP_TYPE cutk  = cutoff  * order;
   FP_TYPE cutk2 = cutoff2 * order;
