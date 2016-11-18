@@ -12,7 +12,7 @@
   #include "external/fastapprox-all.h"
 #endif
 
-// scalar operations
+// === Scalar operations ===
 
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
@@ -85,7 +85,7 @@ static inline FP_TYPE randn(FP_TYPE u, FP_TYPE v) {
   return sqrt(-2.0 * log_2(u1) * v) * cos_2(2.0 * M_PI * u2) + u;
 }
 
-// complex scalar arithmetics
+// === Complex scalar arithmetics ===
 
 typedef struct {
   FP_TYPE real;
@@ -174,7 +174,7 @@ static inline FP_TYPE c_arg_1(cplx a) {
   return atan2_1(a.imag, a.real);
 }
 
-// vector operations & statics
+// === Vector operations & statistics ===
 
 #define CIG_DEF_N_TO_ONE(name, op, init) \
 static inline FP_TYPE name(FP_TYPE* src, int n) { \
@@ -249,7 +249,7 @@ static inline FP_TYPE find_valley(FP_TYPE* x, int lidx, int uidx) {
   return cig_find_peak(x, lidx, uidx, -1);
 }
 
-// numerical routines
+// === Numerical routines ===
 
 // function pointer of one-to-one float point operation with environment variable
 typedef FP_TYPE (*fpe_one_to_one)(FP_TYPE x, void* env);
@@ -267,7 +267,7 @@ cplx cig_polyval(cplx* poly, int np, cplx x);
 // note: may not work for polynomials whose degree > 20
 cplx* cig_roots(cplx* poly, int np);
 
-// memory (de)allocation
+// === Memory (de)allocation ===
 
 static inline FP_TYPE* linspace(FP_TYPE x0, FP_TYPE x1, int nx) {
   FP_TYPE* x = malloc(nx * sizeof(FP_TYPE));
@@ -328,14 +328,14 @@ void** cig_transpose(void** ptr, size_t m, size_t n, size_t size);
 
 #define transpose(ptr, m, n, size) (void*)cig_transpose((void**)(ptr), m, n, size)
 
-// Audio I/O functions
+// === Audio I/O ===
 
 FP_TYPE* wavread(char* filename, int* fs, int* nbit, int* nx);
 void wavwrite(FP_TYPE* y, int ny, int fs, int nbit, char* filename);
 FP_TYPE* wavread_fp(FILE* fin, int* fs, int* nbit, int* nx);
 void wavwrite_fp(FP_TYPE* y, int ny, int fs, int nbit, FILE* fout);
 
-// DSP functions
+// === General DSP routines ===
 
 static inline FP_TYPE* fetch_frame(FP_TYPE* x, int nx, int center, int nf) {
   FP_TYPE* y = malloc(nf * sizeof(FP_TYPE));
@@ -801,7 +801,7 @@ static inline FP_TYPE* rresample(FP_TYPE* x, int nx, FP_TYPE ratio, int* ny) {
   return cig_rresample(x, nx, ratio, ny);
 }
 
-// Audio/Speech Processing Functions
+// === Audio/speech processing routines ===
 
 typedef struct {
   int nchannel;     // number of channels/bands
@@ -1024,7 +1024,7 @@ static inline FP_TYPE* lfmodel_period(lfmodel model, int fs, int n) {
   return cig_lfmodel_period(model, fs, n);
 }
 
-// Plotting Functions (Gnuplot Interface)
+// === Plotting utilities (Gnuplot interface) ===
 // Notice: not supported on Windows
 #if _POSIX_C_SOURCE >= 2
 #include <unistd.h>
