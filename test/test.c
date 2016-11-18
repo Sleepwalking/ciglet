@@ -54,7 +54,7 @@ static void test_lpc(FP_TYPE* x, int nx, int fs) {
   int nhop = 256;
   int nfft = 1024;
   int nfrm = round(nx / nhop);
-  int order = 13;
+  int order = 12;
   FP_TYPE normfc = 0;
   FP_TYPE** Xm = malloc2d(nfrm, nfft / 2 + 1, sizeof(FP_TYPE));
   stft(x, nx, nhop, nfrm, 4, 1, & normfc, NULL, Xm, NULL);
@@ -64,23 +64,17 @@ static void test_lpc(FP_TYPE* x, int nx, int fs) {
   FP_TYPE* buffer = malloc(nfft * 2 * sizeof(FP_TYPE));
   for(int i = 0; i < nfrm; i ++) {
     FP_TYPE* Xwarp = interp1(faxis, Xm[i], nfft / 2 + 1, faxis_warp, nfft / 2 + 1);
-    FP_TYPE* Xsqr = malloc(nfft * sizeof(FP_TYPE));
-    FP_TYPE* R = malloc(nfft * sizeof(FP_TYPE));
-    for(int j = 0; j < nfft / 2 + 1; j ++)
-      Xsqr[j] = Xwarp[j] * Xwarp[j];
+    FP_TYPE* R = NULL;
+    FP_TYPE* a = flpc(Xwarp, nfft / 2 + 1, order, & R);
     free(Xwarp);
-    complete_symm(Xsqr, nfft);
-    ifft(Xsqr, NULL, R, NULL, nfft, buffer);
 
-    FP_TYPE* a = cig_levinson(R, order);
-
-    FP_TYPE g = lpgain(a, R, order);
-    FP_TYPE* S = lpspec(a, g, order, nfft);
+    FP_TYPE g = lpgain(a, R, order + 1);
+    FP_TYPE* S = lpspec(a, g, order + 1, nfft);
     for(int j = 0; j < nfft / 2 + 1; j ++)
       Xm[i][j] = log(S[j]);
     free(S);
     free(a);
-    free(Xsqr); free(R);
+    free(R);
   }
   if(! noplot) {
     figure* fig = plotopen();
@@ -98,7 +92,7 @@ static void test_lpcwave(FP_TYPE* x, int nx, int fs) {
   int nwin = 1024;
   int nfft = 1024;
   int nfrm = round(nx / nhop);
-  int p = 12;
+  int p = 32;
   FP_TYPE** Xm = malloc2d(nfrm, nfft / 2 + 1, sizeof(FP_TYPE));
   for(int i = 0; i < nfrm; i ++) {
     FP_TYPE* xi = fetch_frame(x, nx, i * nhop, nwin);

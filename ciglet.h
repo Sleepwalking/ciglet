@@ -642,6 +642,25 @@ static inline FP_TYPE* lpc(FP_TYPE* x, int nx, int p, FP_TYPE** R_out) {
   return a;
 }
 
+// LPC from magnitude spectrum
+static inline FP_TYPE* flpc(FP_TYPE* S, int ns, int p, FP_TYPE** R_out) {
+  int nfft = pow(2, ceil(log2(ns - 1) + 1));
+  FP_TYPE* tmp = calloc(nfft * 4, sizeof(FP_TYPE));
+  FP_TYPE* R = tmp;
+  FP_TYPE* Xsqr = tmp + nfft;
+  FP_TYPE* fftbuff = tmp + nfft * 2;
+  for(int j = 0; j < ns; j ++)
+    Xsqr[j] = S[j] * S[j];
+  complete_symm(Xsqr, nfft);
+  ifft(Xsqr, NULL, R, NULL, nfft, fftbuff);
+  FP_TYPE* a = cig_levinson(R, p + 1);
+  if(R_out != NULL)
+    *R_out = realloc(tmp, (p + 1) * sizeof(FP_TYPE));
+  else
+    free(tmp);
+  return a;
+}
+
 static inline FP_TYPE lpgain(FP_TYPE* a, FP_TYPE* R, int n) {
   FP_TYPE g = 0;
   for(int i = 0; i < n; i ++)
