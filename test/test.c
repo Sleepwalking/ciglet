@@ -89,8 +89,36 @@ static void test_lpc(FP_TYPE* x, int nx, int fs) {
   }
   free(faxis);
   free(faxis_warp);
-  free2d(Xm, nfft / 2 + 1);
+  free2d(Xm, nfrm);
   free(buffer);
+}
+
+static void test_lpcwave(FP_TYPE* x, int nx, int fs) {
+  int nhop = 256;
+  int nwin = 1024;
+  int nfft = 1024;
+  int nfrm = round(nx / nhop);
+  int p = 12;
+  FP_TYPE** Xm = malloc2d(nfrm, nfft / 2 + 1, sizeof(FP_TYPE));
+  for(int i = 0; i < nfrm; i ++) {
+    FP_TYPE* xi = fetch_frame(x, nx, i * nhop, nwin);
+    FP_TYPE* R = NULL;
+    FP_TYPE* a = lpc(xi, nwin, p, & R);
+    FP_TYPE g = lpgain(a, R, p + 1);
+    FP_TYPE* S = lpspec(a, g, p + 1, nfft);
+    for(int j = 0; j < nfft / 2 + 1; j ++)
+      Xm[i][j] = log(S[j]);
+    free(R);
+    free(S);
+    free(a);
+    free(xi);
+  }
+  if(! noplot) {
+    figure* fig = plotopen();
+    imagesc(fig, Xm, nfrm, nfft / 2 + 1);
+    plotclose(fig);
+  }
+  free2d(Xm, nfrm);
 }
 
 static void test_correlogram(FP_TYPE* x, int nx, int fs) {
@@ -221,6 +249,7 @@ int main(int argc, char* argv[]) {
   FP_TYPE* x = test_wav(& fs, & nx, & nbit);
 
   test_lpc(x, nx, fs);
+  test_lpcwave(x, nx, fs);
   //test_correlogram(x, nx, fs);
   //test_spectral(x, nx, fs, nbit);
 

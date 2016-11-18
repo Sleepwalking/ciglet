@@ -98,6 +98,15 @@ FP_TYPE cig_medianfp(FP_TYPE* x, int nx) {
     (cig_qselect(x, nx, nx / 2 - 1) + cig_qselect(x, nx, nx / 2)) * 0.5;
 }
 
+FP_TYPE* cig_xcorr(FP_TYPE* x, FP_TYPE* y, int nx, int maxlag) {
+  FP_TYPE* R = calloc(maxlag, sizeof(FP_TYPE));
+  for(int m = 0; m < maxlag; m ++) {
+    for(int i = 0; i < nx - m; i ++)
+      R[m] += x[m + i] * y[i];
+  }
+  return R;
+}
+
 // orient: 1 (maximum) or -1 (minimum)
 int cig_find_peak(FP_TYPE* x, int lidx, int uidx, int orient) {
   FP_TYPE max = x[lidx] * orient;
