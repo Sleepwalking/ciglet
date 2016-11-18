@@ -12,15 +12,14 @@ static void test_statistics() {
 }
 
 static void test_numerical() {
-  int order = 25;
-  cplx* a = calloc(order + 1, sizeof(cplx));
-  for(int i = 0; i < order + 1; i ++) {
-    a[i] = c_cplx(randn(0, 5), randn(0, 5));
-  }
+  int order = 20;
+  FP_TYPE* a = calloc(order + 1, sizeof(FP_TYPE));
+  for(int i = 0; i < order + 1; i ++)
+    a[i] = randn(0, 5);
 
-  cplx* r = cig_roots(a, order + 1);
+  cplx* r = rootsr(a, order + 1);
   for(int i = 0; i < order; i ++) {
-    cplx y = cig_polyval(a, order + 1, r[i]);
+    cplx y = polyvalr(a, order + 1, r[i]);
     printf("roots[%d] = %f + %fi\n", i, r[i].real, r[i].imag);
     printf("f(roots[%d]) = %f + %fi\n", i, y.real, y.imag);
   }

@@ -263,9 +263,35 @@ static inline FP_TYPE fzero(fpe_one_to_one func, FP_TYPE xmin, FP_TYPE xmax, voi
 // evaluate polynomial of order np-1 at x
 cplx cig_polyval(cplx* poly, int np, cplx x);
 
+static inline cplx polyval(cplx* poly, int np, cplx x) {
+  return cig_polyval(poly, np, x);
+}
+
+// real coefficient version of polyval
+static inline cplx polyvalr(FP_TYPE* poly, int np, cplx x) {
+  cplx* cpoly = malloc(np * sizeof(cplx));
+  for(int i = 0; i < np; i ++) cpoly[i] = c_cplx(poly[i], 0);
+  cplx ret = cig_polyval(cpoly, np, x);
+  free(cpoly);
+  return ret;
+}
+
 // polynomial root finding; order = np-1
 // note: may not work for polynomials whose degree > 20
 cplx* cig_roots(cplx* poly, int np);
+
+static inline cplx* roots(cplx* poly, int np) {
+  return cig_roots(poly, np);
+}
+
+// real coefficient version of roots
+static inline cplx* rootsr(FP_TYPE* poly, int np) {
+  cplx* cpoly = malloc(np * sizeof(cplx));
+  for(int i = 0; i < np; i ++) cpoly[i] = c_cplx(poly[i], 0);
+  cplx* ret = cig_roots(cpoly, np);
+  free(cpoly);
+  return ret;
+}
 
 // === Memory (de)allocation ===
 
