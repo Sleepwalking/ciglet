@@ -980,15 +980,35 @@ static inline FP_TYPE* lfmodel_period(lfmodel model, int fs, int n) {
 // Plotting Functions (Gnuplot Interface)
 // Notice: not supported on Windows
 #if _POSIX_C_SOURCE >= 2
+#include <unistd.h>
+#include <signal.h>
+#include "sys/types.h"
 
 typedef struct {
   FILE* handle;
 } figure;
 
-static inline figure* plotopen() {
+static inline figure* plotopenv(const char* name) {
   figure* fg = malloc(sizeof(figure));
-  fg -> handle = popen("gnuplot -p", "w");
+  int childio[2];
+  pipe(childio);
+  
+  pid_t child = fork();
+  if(child == 0) {
+    dup2(childio[0], STDIN_FILENO);
+    close(childio[1]);
+    execlp(name, name, "-p", NULL);
+    fprintf(stderr, "Error: Gnuplot not available.\n");
+    exit(1);
+  } else {
+    close(childio[0]);
+    fg -> handle = fdopen(childio[1], "w");
+  }
   return fg;
+}
+
+static inline figure* plotopen() {
+  return plotopenv("gnuplot-qt");
 }
 
 static inline void plot(figure* fg, FP_TYPE* x, FP_TYPE* y, int nx, char ccolor) {
