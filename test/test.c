@@ -11,6 +11,23 @@ static void test_statistics() {
   free(rand2);
 }
 
+static void test_numerical() {
+  int order = 25;
+  cplx* a = calloc(order + 1, sizeof(cplx));
+  for(int i = 0; i < order + 1; i ++) {
+    a[i] = c_cplx(randn(0, 5), randn(0, 5));
+  }
+
+  cplx* r = cig_roots(a, order + 1);
+  for(int i = 0; i < order; i ++) {
+    cplx y = cig_polyval(a, order + 1, r[i]);
+    printf("roots[%d] = %f + %fi\n", i, r[i].real, r[i].imag);
+    printf("f(roots[%d]) = %f + %fi\n", i, y.real, y.imag);
+  }
+  free(r);
+  free(a);
+}
+
 static void test_lf() {
   lfmodel testlf = lfmodel_from_rd(1, 0.008, 0.3);
   FP_TYPE* freq = linspace(0, 6000, 200);
@@ -236,16 +253,17 @@ int main(int argc, char* argv[]) {
   if(argc >= 2 && ! strcmp(argv[1], "noplot"))
     noplot = 1;
   
-  //test_statistics();
-  //test_lf();
+  test_statistics();
+  test_lf();
 
   int fs, nx, nbit;
   FP_TYPE* x = test_wav(& fs, & nx, & nbit);
 
+  test_numerical();
   test_lpc(x, nx, fs);
   test_lpcwave(x, nx, fs);
-  //test_correlogram(x, nx, fs);
-  //test_spectral(x, nx, fs, nbit);
+  test_correlogram(x, nx, fs);
+  test_spectral(x, nx, fs, nbit);
 
   free(x);
   return 0;

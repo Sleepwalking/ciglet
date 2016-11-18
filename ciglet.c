@@ -107,6 +107,91 @@ FP_TYPE* cig_xcorr(FP_TYPE* x, FP_TYPE* y, int nx, int maxlag) {
   return R;
 }
 
+static int sign(FP_TYPE x) {
+  return x > 0.0 ? 1 : (x == 0.0 ? 0 : -1);
+}
+
+static FP_TYPE fzero_(fpe_one_to_one func, FP_TYPE xmin, FP_TYPE xmax, int depth, void* env) {
+  FP_TYPE xmean = (xmin + xmax) * 0.5;
+  FP_TYPE ymean = func(xmean, env);
+  if(fabs(ymean) < 1e-5 || depth > 100) return xmean;
+  FP_TYPE ymax = func(xmax, env);
+  if(sign(ymax) != sign(ymean)) return fzero_(func, xmean, xmax, depth + 1, env);
+  return fzero_(func, xmin, xmean, depth + 1, env);
+}
+
+FP_TYPE cig_fzero(fpe_one_to_one func, FP_TYPE xmin, FP_TYPE xmax, void* env) {
+  if(sign(func(xmax, env)) == sign(func(xmin, env))) return 0;
+  return fzero_(func, xmin, xmax, 0, env);
+}
+
+cplx cig_polyval(cplx* poly, int np, cplx x) {
+  cplx y = poly[np - 1]; // constant term
+  cplx xpow = x;
+  for(int i = np - 2; i >= 0; i --) {
+    y = c_add(y, c_mul(poly[i], xpow));
+    xpow = c_mul(xpow, x);
+  }
+  return y;
+}
+
+// Durand-Kerner method for finding polynomial roots
+cplx* cig_roots(cplx* poly, int np) {
+  if(np < 2) return NULL;
+  cplx* r0 = calloc(np - 1, sizeof(cplx));
+  cplx* r1 = calloc(np - 1, sizeof(cplx));
+
+  // normalize polynomial coefficients
+  cplx* a = calloc(np, sizeof(cplx));
+  for(int i = 0; i < np; i ++)
+    a[i] = c_div(poly[i], poly[0]);
+
+  // max radius of roots
+  FP_TYPE rmax = 0;
+  for(int i = 0; i < np; i ++)
+    rmax = max(rmax, c_abs(a[i]));
+  rmax += 1;
+
+  // start from np-1 numbers uniformly distributed on the unit circle
+  r0[0] = c_cplx(1, 0);
+  cplx rotation = c_cplx(cos_2(2 * M_PI / (np - 1)), sin_2(2 * M_PI / (np - 1)));
+  for(int i = 1; i < np - 1; i ++) {
+    r0[i] = c_mul(r0[i - 1], rotation);
+    r1[i] = r0[i];
+  }
+
+  const int niter = 50;
+  for(int n = 0; n < niter; n ++) {
+    FP_TYPE maxerr = 0;
+    for(int i = 0; i < np - 1; i ++) {
+      cplx fval = cig_polyval(a, np, r0[i]);
+      FP_TYPE err = c_abs(fval);
+      if(err > maxerr) maxerr = err;
+      cplx denom = c_cplx(1, 0);
+      for(int j = 0; j < np - 1; j ++) { // calculate denominator
+        if(j == i) continue;
+        denom = c_mul(denom, c_sub(r0[i], r0[j]));
+      }
+      cplx delta = c_div(fval, denom);
+      r1[i] = c_sub(r0[i], delta);
+    }
+    if(maxerr < 1e-6) break;
+    for(int i = 0; i < np - 1; i ++) {
+      // take off-center points back into possible range of roots
+      FP_TYPE rr = c_abs(r1[i]);
+      if(rr > rmax) {
+        r1[i].real *= rmax / rr;
+        r1[i].imag *= rmax / rr;
+      }
+      r0[i] = r1[i];
+    }
+  }
+
+  free(a);
+  free(r0);
+  return r1;
+}
+
 // orient: 1 (maximum) or -1 (minimum)
 int cig_find_peak(FP_TYPE* x, int lidx, int uidx, int orient) {
   FP_TYPE max = x[lidx] * orient;
@@ -513,24 +598,6 @@ FP_TYPE* cig_rresample(FP_TYPE* x, int nx, FP_TYPE ratio, int* ny) {
   }
 
   return y;
-}
-
-static int sign(FP_TYPE x) {
-  return x > 0.0 ? 1 : (x == 0.0 ? 0 : -1);
-}
-
-static FP_TYPE fzero_(fpe_one_to_one func, FP_TYPE xmin, FP_TYPE xmax, int depth, void* env) {
-  FP_TYPE xmean = (xmin + xmax) * 0.5;
-  FP_TYPE ymean = func(xmean, env);
-  if(fabs(ymean) < 1e-5 || depth > 100) return xmean;
-  FP_TYPE ymax = func(xmax, env);
-  if(sign(ymax) != sign(ymean)) return fzero_(func, xmean, xmax, depth + 1, env);
-  return fzero_(func, xmin, xmean, depth + 1, env);
-}
-
-FP_TYPE cig_fzero(fpe_one_to_one func, FP_TYPE xmin, FP_TYPE xmax, void* env) {
-  if(sign(func(xmax, env)) == sign(func(xmin, env))) return 0;
-  return fzero_(func, xmin, xmax, 0, env);
 }
 
 // Pearson Correlation Coefficient

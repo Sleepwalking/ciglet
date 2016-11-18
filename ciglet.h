@@ -249,6 +249,24 @@ static inline FP_TYPE find_valley(FP_TYPE* x, int lidx, int uidx) {
   return cig_find_peak(x, lidx, uidx, -1);
 }
 
+// numerical routines
+
+// function pointer of one-to-one float point operation with environment variable
+typedef FP_TYPE (*fpe_one_to_one)(FP_TYPE x, void* env);
+
+FP_TYPE cig_fzero(fpe_one_to_one func, FP_TYPE xmin, FP_TYPE xmax, void* env);
+
+static inline FP_TYPE fzero(fpe_one_to_one func, FP_TYPE xmin, FP_TYPE xmax, void* env) {
+  return cig_fzero(func, xmin, xmax, env);
+}
+
+// evaluate polynomial of order np-1 at x
+cplx cig_polyval(cplx* poly, int np, cplx x);
+
+// polynomial root finding; order = np-1
+// note: may not work for polynomials whose degree > 20
+cplx* cig_roots(cplx* poly, int np);
+
 // memory (de)allocation
 
 static inline FP_TYPE* linspace(FP_TYPE x0, FP_TYPE x1, int nx) {
@@ -781,15 +799,6 @@ FP_TYPE* cig_rresample(FP_TYPE* x, int nx, FP_TYPE ratio, int* ny);
 
 static inline FP_TYPE* rresample(FP_TYPE* x, int nx, FP_TYPE ratio, int* ny) {
   return cig_rresample(x, nx, ratio, ny);
-}
-
-// function pointer of one-to-one float point operation with environment variable
-typedef FP_TYPE (*fpe_one_to_one)(FP_TYPE x, void* env);
-
-FP_TYPE cig_fzero(fpe_one_to_one func, FP_TYPE xmin, FP_TYPE xmax, void* env);
-
-static inline FP_TYPE fzero(fpe_one_to_one func, FP_TYPE xmin, FP_TYPE xmax, void* env) {
-  return cig_fzero(func, xmin, xmax, env);
 }
 
 // Audio/Speech Processing Functions
