@@ -263,20 +263,59 @@ static void test_spectral(FP_TYPE* x, int nx, int fs, int nbit) {
 }
 
 int main(int argc, char* argv[]) {
+  int stat_on = 0;
+  int lf_on = 0;
+  int numerical_on = 0;
+  int lpc_on = 0;
+  int lpcwave_on = 0;
+  int corr_on = 0;
+  int spec_on = 0;
+
   if(argc >= 2 && ! strcmp(argv[1], "noplot"))
     noplot = 1;
-  
-  test_statistics();
-  test_lf();
+  if(argc >= 3 && (strcmp(argv[2], "all"))) {
+    if(! strcmp(argv[2], "statistics"))
+      stat_on = 1;
+    else
+    if(! strcmp(argv[2], "lf"))
+      lf_on = 1;
+    else
+    if(! strcmp(argv[2], "numerical"))
+      numerical_on = 1;
+    else
+    if(! strcmp(argv[2], "lpc"))
+      lpc_on = 1;
+    else
+    if(! strcmp(argv[2], "lpcwave"))
+      lpcwave_on = 1;
+    else
+    if(! strcmp(argv[2], "corr"))
+      corr_on = 1;
+    else
+    if(! strcmp(argv[2], "spec"))
+      spec_on = 1;
+  } else {
+    stat_on = lf_on = numerical_on = lpc_on = lpcwave_on = corr_on = spec_on = 1;
+  }
+
+  if(stat_on)
+    test_statistics();
+  if(lf_on)
+    test_lf();
 
   int fs, nx, nbit;
   FP_TYPE* x = test_wav(& fs, & nx, & nbit);
 
-  test_numerical();
-  test_lpc(x, nx, fs);
-  test_lpcwave(x, nx, fs);
-  test_correlogram(x, nx, fs);
-  test_spectral(x, nx, fs, nbit);
+  if(numerical_on)
+    test_numerical();
+  if(lpc_on)
+    test_lpc(x, nx, fs);
+  if(lpcwave_on)
+    test_lpcwave(x, nx, fs);
+  if(corr_on)
+    test_correlogram(x, nx, fs);
+  if(spec_on)
+    test_spectral(x, nx, fs, nbit);
 
   free(x);
   return 0;

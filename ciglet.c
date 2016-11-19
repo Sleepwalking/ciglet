@@ -185,14 +185,20 @@ cplx* cig_roots(cplx* poly, int np) {
     rmax = max(rmax, c_abs(a[i]));
   rmax += 1;
 
-  // start from np-1 numbers uniformly distributed on the unit circle
   r0[0] = c_cplx(1, 0);
-  cplx rotation = c_cplx(cos_2(2 * M_PI / (np - 1)), sin_2(2 * M_PI / (np - 1)));
-  for(int i = 1; i < np - 1; i ++) {
-    r0[i] = c_mul(r0[i - 1], rotation);
-    r1[i] = r0[i];
+  if(np > 3) {
+    // start from np-1 numbers uniformly distributed on the unit circle
+    // if np <= 3, all initial values would be real, which hardly converge.
+    cplx rotation = c_cplx(cos_1(2 * M_PI / (np - 1)), sin_1(2 * M_PI / (np - 1)));
+    for(int i = 1; i < np - 1; i ++) {
+      r0[i] = c_mul(r0[i - 1], rotation);
+      r1[i] = r0[i];
+    }
+  } else {
+    for(int i = 1; i < np - 1; i ++)
+      r0[i] = r1[i] = c_cplx(0.4, 0.6);
   }
-
+  
   const int niter = 50;
   for(int n = 0; n < niter; n ++) {
     FP_TYPE maxerr = 0;
