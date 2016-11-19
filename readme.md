@@ -17,15 +17,16 @@ Function index
 
 ### Scalar operations
 
-`max`, `min`, `linterp`, `fastatan2`, `randu`, `randn`
-
-### Complex scalar operations
-
-`c_cplx`, `c_conj`, `c_add`, `c_sub`, `c_mul`, `c_div`, `c_exp`, `c_abs`, `c_arg`
+* random number generation: `randu`, `randn`
+* miscellaneous: `max`, `min`, `linterp`, `fastatan2`, 
+* complex arithmetics: `c_cplx`, `c_conj`, `c_add`, `c_sub`, `c_mul`, `c_div`, `c_exp`, `c_abs`, `c_arg`
 
 ### Vector operations and statistics
 
-`sumfp`, `sumsqrfp`, `maxfp`, `minfp`, `meanfp`, `varfp`, `medianfp`, `selectnth`, `sort`, `xcorr`, `corr`, `cov`, `find_peak`/`find_valley`
+* vectorized arithmetics: `sumfp`, `sumsqrfp`, `maxfp`, `minfp`
+* non-parameteric statistics: `meanfp`, `varfp`, `medianfp`, `xcorr`, `corr`, `cov`
+* sorting: `selectnth`, `sort`
+* peak picking: `find_peak`, `find_valley`
 
 ### Numerical routines
 
@@ -33,7 +34,8 @@ Function index
 
 ### Memory (de)allocation
 
-`linspace`, `iota`, `malloc2d`, `free2d`, `copy2d`, `flatten`, `reshape`, `transpose`
+* enumeration: `linspace`, `iota`
+* 2d array operations: `malloc2d`, `free2d`, `copy2d`, `flatten`, `reshape`, `transpose`
 
 ### Audio I/O
 
@@ -41,11 +43,25 @@ Function index
 
 ### General DSP routines
 
-`fetch_frame`, `gensin`/`gensins`, `boxcar`, `hanning`, `hamming`, `mltsine`, `blackman_harris`, `blackman`, `fft`/`ifft`, `idft`, `dct`, `fftshift`, `wrap`/`unwrap`, `diff`, `cumsum`, `flip`, `abscplx`, `argcplx`, `polar2real`, `polar2imag`, `phase_diff`, `complete_symm`/`complete_asymm`, `rceps`, `irceps`, `minphase`, `fir1`, `conv`, `filter`, `filtfilt`, `levinson`, `lpc`/`flpc`, `lpgain`, `lpspec`, `lpresf`, `interp1`/`interp1u`, `sincinterp1u`, `medfilt1`, `white_noise`, `moving_avg`, `moving_rms`, `itakura_saito`, `safe_aliased_sinc`/`safe_aliased_dsinc`, `rresample`
+* windows: `boxcar`, `hanning`, `hamming`, `mltsine`, `blackman_harris`, `blackman`
+* Fourier transform: `fft`, `ifft`, `idft`, `dct`, `fftshift`
+* phase manipulation: `wrap`, `unwrap`, `phase_diff`
+* complex number conversion: `abscplx`, `argcplx`, `polar2real`, `polar2imag`, `complete_symm`, `complete_asymm`
+* cepstral analysis: `rceps`, `irceps`, `minphase`
+* filtering: `fir1`, `conv`, `filter`, `filtfilt`, `moving_avg`, `moving_rms`, `medfilt1`
+* linear prediction: `levinson`, `lpc`, `flpc`, `lpgain`, `lpspec`, `lpresf`
+* interpolation: `interp1`, `interp1u`, `sincinterp1u`, `rresample`
+* operations on sinusoids: `gensin`, `gensins`, `safe_aliased_sinc`, `safe_aliased_dsinc`
+* miscellaneous: `fetch_frame`, `diff`, `cumsum`, `flip` ,`white_noise`, `itakura_saito`
 
 ### Audio/speech processing routines
 
-`mel2freq`/`freq2mel`, `freq2bark`/`bark2freq`, `eqloud`, `melspace`, `correlogram`, `invcrgm`, `stft`/`istft`, `qifft`, `spgm2cegm`/`cegm2spgm`, `create_filterbank`, `delete_filterbank`, `filterbank_spgm`, `filterbank_spec`, `be2cc`, `be2ccgm`, `spec2env`, `lfmodel_from_rd`, `lfmodel_spectrum`, `lfmodel_period`
+* psychoacoustics: `mel2freq`, `freq2mel`, `freq2bark`, `bark2freq`, `eqloud`, `melspace`
+* correlogram: `correlogram`, `invcrgm`
+* spectrogram and STFT: `stft`, `istft`, `qifft`, `spgm2cegm`, `cegm2spgm`
+* filterbank analysis: `filterbank_spgm`, `filterbank_spec`, `be2cc`, `be2ccgm`
+* spectral envelope estimation: `spec2env`
+* glottal model: `lfmodel_from_rd`, `lfmodel_spectrum`, `lfmodel_period`
 
 ### Plotting utilities (Gnuplot interface, unavailable on Windows)
 
