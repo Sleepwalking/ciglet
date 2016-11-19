@@ -1202,7 +1202,7 @@ static inline void imagesc(figure* fg, FP_TYPE** X, int m, int n) {
 }
 
 static inline void plotclose(figure* fg) {
-  pclose(fg -> handle);
+  fclose(fg -> handle);
   free(fg);
 }
 
