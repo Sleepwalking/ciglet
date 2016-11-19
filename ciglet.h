@@ -186,9 +186,9 @@ static inline cplx c_exp_2(cplx a) {
 
 static inline cplx c_exp_1(cplx a) {
   cplx ret;
-  FP_TYPE mag = exp(a.real);
-  ret.real = mag * cos(a.imag);
-  ret.imag = mag * sin(a.imag);
+  FP_TYPE mag = exp_1(a.real);
+  ret.real = mag * cos_1(a.imag);
+  ret.imag = mag * sin_1(a.imag);
   return ret;
 }
 
