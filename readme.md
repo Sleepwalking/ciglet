@@ -10,7 +10,7 @@ License: BSD
 Background
 ---
 
-In the past few years I've been writing and maintaining quite a few C-written speech processing projects (e.g. *libllsm*, *libpyin*, *moresampler*), some of which were partially translated from Matlab/Octave-based prototypes. Gradually I ended up having lots of frequent rewrites of C version of Matlab routines such as `sum`, `fir1`, `conv`, `interp1`, etc. In October 2016 I finally made the move to extract all these repeating patterns and group them into one independent library. Since it would be referred by quite a few projects, the new library is meant to be lightweight, easy to link, and fast, which is why it's named *ciglet*, an acronym of "C-written sIGnal codeLETs".
+In the past few years I've been writing and maintaining quite a few C-written speech processing projects (e.g. *libllsm*, *libpyin*, *moresampler*), some of which were partially translated from Matlab/Octave-based prototypes. Gradually I ended up having lots of frequent rewrites of C version of Matlab routines such as `sum`, `fir1`, `conv`, `interp1`, etc. In August 2016 I finally made the move to extract all these repeating patterns and group them into one independent library. Since it would be referred by quite a few projects, the new library is meant to be lightweight, easy to link, and fast, which is why it's named *ciglet*, an acronym of "C-written sIGnal codeLETs".
 
 Function index
 ---
