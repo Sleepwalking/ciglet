@@ -700,6 +700,20 @@ static inline FP_TYPE* filtfilt(FP_TYPE* b, int nb, FP_TYPE* a, int na,
   return y;
 }
 
+// The following lists different forms of an all-pole filter, which might be helpful
+//   when using LPC-related functions.
+// a[0] x[n] = u[n] - a[1] x[n - 1] - a[2] x[n - 2] - a[3] x[n - 3] - ...      recurrent form
+// a[0] X(z) = U(z) - (a[1] z^-1 + a[2] z^-2 + a[3] z^-3 + ...) X(z)           z-transform
+// H(z) = X(z) / U(z) = 1 / (a[0] + a[1] z^-1 + a[2] z^-2 + a[3] z^-3 + ...)   transfer function
+//      = z^N / (a[0] z^p + a[1] z^p-1 + a[2] z^p-2 + ... + a[p - 1] z + a[p]) anti-causal
+//      = z^N / [a[0] (z - p[1]) (z - p[2]) (z - p[3]) ... (z - p[p])]         factorization
+//      = 1 / [a[0] (1 - p[1] z^-1) (1 - p[2] z^-1) ... (1 - p[p] z^-1)]       poles
+
+// Matlab functions tf2zp/tf2zpk are equivalent to respectively calling roots() on
+//   numerator and denominator coefficients (you might want to first normalize the
+//   zero-order term to get the gain). For the sake of simplicity they are not going
+//   to be implemented.
+
 // R: autocorrelation; returns n sized array of AR coefficients
 FP_TYPE* cig_levinson(FP_TYPE* R, int n);
 
