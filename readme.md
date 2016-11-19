@@ -41,7 +41,7 @@ Function index
 
 ### General DSP routines
 
-`fetch_frame`, `gensin`/`gensins`, `boxcar`, `hanning`, `hamming`, `mltsine`, `blackman_harris`, `blackman`, `fft`/`ifft`, `idft`, `dct`, `fftshift`, `wrap`/`unwrap`, `diff`, `cumsum`, `flip`, `abscplx`, `argcplx`, `polar2real`, `polar2imag`, `phase_diff`, `complete_symm`/`complete_asymm`, `rceps`, `irceps`, `minphase`, `fir1`, `conv`, `filter`, `filtfilt`, `levinson`, `lpc`/`flpc`, `lpgain`, `lpspec`, `interp1`/`interp1u`, `sincinterp1u`, `medfilt1`, `white_noise`, `moving_avg`, `moving_rms`, `itakura_saito`, `safe_aliased_sinc`/`safe_aliased_dsinc`, `rresample`
+`fetch_frame`, `gensin`/`gensins`, `boxcar`, `hanning`, `hamming`, `mltsine`, `blackman_harris`, `blackman`, `fft`/`ifft`, `idft`, `dct`, `fftshift`, `wrap`/`unwrap`, `diff`, `cumsum`, `flip`, `abscplx`, `argcplx`, `polar2real`, `polar2imag`, `phase_diff`, `complete_symm`/`complete_asymm`, `rceps`, `irceps`, `minphase`, `fir1`, `conv`, `filter`, `filtfilt`, `levinson`, `lpc`/`flpc`, `lpgain`, `lpspec`, `lpresf`, `interp1`/`interp1u`, `sincinterp1u`, `medfilt1`, `white_noise`, `moving_avg`, `moving_rms`, `itakura_saito`, `safe_aliased_sinc`/`safe_aliased_dsinc`, `rresample`
 
 ### Audio/speech processing routines
 

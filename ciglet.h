@@ -776,6 +776,34 @@ static inline FP_TYPE* lpspec(FP_TYPE* a, FP_TYPE gain, int n, int nfft) {
   return Sr;
 }
 
+// get resonance frequencies (relative to nyquist) from LP coefficients
+// returns array of frequencies in ascending order; np is number of poles;
+//   pole locations are written into poles if not NULL.
+static inline FP_TYPE* lpresf(FP_TYPE* a, int n, cplx* poles, int* np) {
+  cplx* r = rootsr(a, n);
+  FP_TYPE* freqs = malloc((n - 1) * sizeof(FP_TYPE));
+  *np = 0;
+  for(int i = 0; i < n - 1; i ++) {
+    FP_TYPE f = atan2_2(r[i].imag, r[i].real) / M_PI;
+    if(f > 0.001 && f < 0.999) { // ignore real poles and negative frequencies
+      r[*np] = r[i];
+      freqs[*np] = f;
+      (*np) ++;
+    }
+  }
+  int* freqidx = malloc((*np) * sizeof(int));
+  FP_TYPE* freqsort = cig_sort(freqs, *np, freqidx);
+  free(freqs);
+
+  if(poles != NULL) {
+    for(int i = 0; i < *np; i ++)
+      poles[i] = r[freqidx[i]];
+  }
+  free(r);
+  free(freqidx);
+  return freqsort;
+}
+
 FP_TYPE* cig_interp(FP_TYPE* xi, FP_TYPE* yi, int ni, FP_TYPE* x, int nx);
 
 static inline FP_TYPE* interp1(FP_TYPE* xi, FP_TYPE* yi, int ni, FP_TYPE* x, int nx) {

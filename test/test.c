@@ -71,12 +71,13 @@ static void test_lpc(FP_TYPE* x, int nx, int fs) {
   int nfft = 1024;
   int nfrm = round(nx / nhop);
   int order = 12;
+  FP_TYPE maxfreq = 5500;
   FP_TYPE normfc = 0;
   FP_TYPE** Xm = malloc2d(nfrm, nfft / 2 + 1, sizeof(FP_TYPE));
   stft(x, nx, nhop, nfrm, 4, 1, & normfc, NULL, Xm, NULL);
 
   FP_TYPE* faxis = linspace(0, fs / 2, nfft / 2 + 1);
-  FP_TYPE* faxis_warp = linspace(0, 5500, nfft / 2 + 1);
+  FP_TYPE* faxis_warp = linspace(0, maxfreq, nfft / 2 + 1);
   FP_TYPE* buffer = malloc(nfft * 2 * sizeof(FP_TYPE));
   for(int i = 0; i < nfrm; i ++) {
     FP_TYPE* Xwarp = interp1(faxis, Xm[i], nfft / 2 + 1, faxis_warp, nfft / 2 + 1);
@@ -88,6 +89,19 @@ static void test_lpc(FP_TYPE* x, int nx, int fs) {
     FP_TYPE* S = lpspec(a, g, order + 1, nfft);
     for(int j = 0; j < nfft / 2 + 1; j ++)
       Xm[i][j] = log(S[j]);
+
+    int npole = 0;
+    cplx* poles = calloc(order, sizeof(cplx));
+    FP_TYPE* formants = lpresf(a, order + 1, poles, & npole);
+    if(i % (nfrm / 10) == 0)
+    for(int j = 0; j < npole; j ++) {
+      formants[j] *= maxfreq;
+      printf("%d %f (%f, %f)\n", j, formants[j], poles[j].real, poles[j].imag);
+    }
+
+    free(poles);
+    free(formants);
+
     free(S);
     free(a);
     free(R);
