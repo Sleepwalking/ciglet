@@ -466,6 +466,7 @@ static inline FP_TYPE* fname(int n) { \
 CIG_DEF_MLTSINE(mltsine, sin_3);
 CIG_DEF_MLTSINE(mltsine_2, sin_2);
 
+// 92dB side lobe
 #define CIG_DEF_BLACKMAN_HARRIS(fname, cosfunc) \
 static inline FP_TYPE* fname(int n) { \
   FP_TYPE* ret = malloc(n * sizeof(FP_TYPE)); \
@@ -482,6 +483,24 @@ static inline FP_TYPE* fname(int n) { \
 
 CIG_DEF_BLACKMAN_HARRIS(blackman_harris, cos_3);
 CIG_DEF_BLACKMAN_HARRIS(blackman_harris_2, cos_2);
+
+// 98dB side lobe, Prof. Kawahara's favorite
+#define CIG_DEF_NUTTALL98(fname, cosfunc) \
+static inline FP_TYPE* fname(int n) { \
+  FP_TYPE* ret = malloc(n * sizeof(FP_TYPE)); \
+  const FP_TYPE a0 = 0.3635819; \
+  const FP_TYPE a1 = 0.4891775; \
+  const FP_TYPE a2 = 0.1365995; \
+  const FP_TYPE a3 = 0.0106411; \
+  for(int i = 0; i < n; i ++) \
+    ret[i] = a0 - a1 * cosfunc(2.0 * M_PI * i / n) + \
+                  a2 * cosfunc(4.0 * M_PI * i / n) - \
+                  a3 * cosfunc(6.0 * M_PI * i / n); \
+  return ret; \
+}
+
+CIG_DEF_NUTTALL98(nuttall98, cos_3);
+CIG_DEF_NUTTALL98(nuttall98_2, cos_2);
 
 #define CIG_DEF_BLACKMAN(fname, cosfunc) \
 static inline FP_TYPE* fname(int n) { \
