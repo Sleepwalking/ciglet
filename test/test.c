@@ -66,6 +66,28 @@ static FP_TYPE* test_wav(int* fs, int* nx, int* nbit) {
   return x;
 }
 
+static void test_if(FP_TYPE* x, int nx, int fs) {
+  ifdetector* ifd = cig_create_ifdetector(220.0 / fs, 220.0 / fs);
+  int nhop = 256;
+  int nfrm = nx / nhop;
+  
+  FP_TYPE* x_if = calloc(nfrm, sizeof(FP_TYPE));
+  for(int i = 0; i < nfrm; i ++) {
+    FP_TYPE* xi = fetch_frame(x, nx, i * nhop, ifd -> nh);
+    x_if[i] = cig_ifdetector_estimate(ifd, xi, ifd -> nh) * fs;
+    //printf("%f %f\n", (FP_TYPE)i * nhop / fs, x_if[i]);
+    free(xi);
+  }
+  
+  if(! noplot) {
+    figure* fg = plotopen();
+    plot(fg, NULL, x_if, nfrm, 'b');
+    plotclose(fg);
+  }
+  free(x_if);
+  cig_delete_ifdetector(ifd);
+}
+
 static void test_lpc(FP_TYPE* x, int nx, int fs) {
   int nhop = 256;
   int nfft = 1024;
@@ -265,6 +287,7 @@ static void test_spectral(FP_TYPE* x, int nx, int fs, int nbit) {
 int main(int argc, char* argv[]) {
   int stat_on = 0;
   int lf_on = 0;
+  int if_on = 0;
   int numerical_on = 0;
   int lpc_on = 0;
   int lpcwave_on = 0;
@@ -279,6 +302,9 @@ int main(int argc, char* argv[]) {
     else
     if(! strcmp(argv[2], "lf"))
       lf_on = 1;
+    else
+    if(! strcmp(argv[2], "if"))
+      if_on = 1;
     else
     if(! strcmp(argv[2], "numerical"))
       numerical_on = 1;
@@ -295,7 +321,7 @@ int main(int argc, char* argv[]) {
     if(! strcmp(argv[2], "spec"))
       spec_on = 1;
   } else {
-    stat_on = lf_on = numerical_on = lpc_on = lpcwave_on = corr_on = spec_on = 1;
+    stat_on = lf_on = if_on = numerical_on = lpc_on = lpcwave_on = corr_on = spec_on = 1;
   }
 
   if(stat_on)
@@ -306,6 +332,8 @@ int main(int argc, char* argv[]) {
   int fs, nx, nbit;
   FP_TYPE* x = test_wav(& fs, & nx, & nbit);
 
+  if(if_on)
+    test_if(x, nx, fs);
   if(numerical_on)
     test_numerical();
   if(lpc_on)

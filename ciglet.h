@@ -923,6 +923,37 @@ static inline FP_TYPE* rresample(FP_TYPE* x, int nx, FP_TYPE ratio, int* ny) {
 
 // === Audio/speech processing routines ===
 
+// instantaneous frequency detector
+typedef struct {
+  FP_TYPE fc;       // central frequency over sampling rate
+  int nh;           // length of impulse responses
+  FP_TYPE* hr;      // impulse response (real)
+  FP_TYPE* hi;      // impulse response (imag)
+  FP_TYPE* hdr;     // impulse response derivative (real)
+  FP_TYPE* hdi;     // impulse response derivative (imag)
+} ifdetector;
+
+// fc: central frequency, fres: frequency resolution
+// both are expressed as ratio of sampling rate
+ifdetector* cig_create_ifdetector(FP_TYPE fc, FP_TYPE fres);
+void cig_delete_ifdetector(ifdetector* dst);
+
+static inline ifdetector* create_ifdetector(FP_TYPE fc, FP_TYPE fres) {
+  return cig_create_ifdetector(fc, fres);
+}
+
+static inline void delete_ifdetector(ifdetector* dst) {
+  cig_delete_ifdetector(dst);
+}
+
+// estimate instantaneous frequency (as a ratio of sampling rate) at the center of x
+// returns 0 if x is not long enough
+FP_TYPE cig_ifdetector_estimate(ifdetector* ifd, FP_TYPE* x, int nx);
+
+static inline FP_TYPE ifdetector_estimate(ifdetector* ifd, FP_TYPE* x, int nx) {
+  return cig_ifdetector_estimate(ifd, x, nx);
+}
+
 typedef struct {
   int nchannel;     // number of channels/bands
   int nf;           // size of frequency response

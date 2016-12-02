@@ -18,7 +18,7 @@ Function index
 ### Scalar operations
 
 * random number generation: `randu`, `randn`
-* miscellaneous: `max`, `min`, `linterp`, `fastatan2`, 
+* miscellaneous: `max`, `min`, `linterp`, `fastatan2`
 * complex arithmetics: `c_cplx`, `c_conj`, `c_add`, `c_sub`, `c_mul`, `c_div`, `c_exp`, `c_abs`, `c_arg`
 
 ### Vector operations and statistics
@@ -57,7 +57,7 @@ Function index
 ### Audio/speech processing routines
 
 * psychoacoustics: `mel2freq`, `freq2mel`, `freq2bark`, `bark2freq`, `eqloud`, `melspace`
-* correlogram: `correlogram`, `invcrgm`
+* frequency estimation: `ifdetector_estimate`, `correlogram`, `invcrgm`
 * spectrogram and STFT: `stft`, `istft`, `qifft`, `spgm2cegm`, `cegm2spgm`
 * filterbank analysis: `filterbank_spgm`, `filterbank_spec`, `be2cc`, `be2ccgm`
 * spectral envelope estimation: `spec2env`

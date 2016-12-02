@@ -639,6 +639,66 @@ FP_TYPE* cig_rresample(FP_TYPE* x, int nx, FP_TYPE ratio, int* ny) {
   return y;
 }
 
+ifdetector* cig_create_ifdetector(FP_TYPE fc, FP_TYPE fres) {
+  const FP_TYPE a[4] = {0.338946, 0.481973, 0.161054, 0.018027};
+  
+  ifdetector* ret = malloc(sizeof(ifdetector));
+  int nh = 4 / fres;
+  ret -> fc = fc;
+  ret -> nh = nh;
+  ret -> hr = calloc(ret -> nh, sizeof(FP_TYPE));
+  ret -> hi = calloc(ret -> nh, sizeof(FP_TYPE));
+  ret -> hdr = calloc(ret -> nh, sizeof(FP_TYPE));
+  ret -> hdi = calloc(ret -> nh, sizeof(FP_TYPE));
+  FP_TYPE omega = 2.0 * M_PI * fc;
+  FP_TYPE omegaw = 2.0 * M_PI / nh;
+
+  for(int i = 0; i < ret -> nh; i ++)
+    for(int k = 0; k < 4; k ++) {
+      ret -> hr[i]  += a[k] * cos_3(k * omegaw * (i - nh / 2));
+      ret -> hdr[i] += -omegaw * k * a[k] * sin_3(k * omegaw * (i - nh / 2));
+    }
+
+  for(int i = 0; i < ret -> nh; i ++) {
+    FP_TYPE sini = sin_3(omega * (i - nh / 2));
+    FP_TYPE cosi = cos_3(omega * (i - nh / 2));
+    FP_TYPE w = ret -> hr[i];
+    FP_TYPE wd = ret -> hdr[i];
+    ret -> hr[i] = w * cosi;
+    ret -> hi[i] = w * sini;
+    ret -> hdi[i] = omega * w * cosi + wd * sini;
+    ret -> hdr[i] = wd * cosi - omega * w * sini;
+  }
+  
+  return ret;
+}
+
+void cig_delete_ifdetector(ifdetector* dst) {
+  if(dst == NULL) return;
+  free(dst -> hr); free(dst -> hi);
+  free(dst -> hdr); free(dst -> hdi);
+  free(dst);
+}
+
+FP_TYPE cig_ifdetector_estimate(ifdetector* ifd, FP_TYPE* x, int nx) {
+  if(nx < ifd -> nh) return 0;
+  int nh = ifd -> nh;
+  int n0 = nx / 2 - nh / 2;
+
+  // single-point convolution
+  FP_TYPE yr = 0; FP_TYPE yi = 0;
+  FP_TYPE ydr = 0; FP_TYPE ydi = 0;
+  for(int i = 0; i < nh; i ++) {
+    yr += ifd -> hr[i] * x[n0 + i];
+    yi += ifd -> hi[i] * x[n0 + i];
+    ydr += ifd -> hdr[i] * x[n0 + i];
+    ydi += ifd -> hdi[i] * x[n0 + i];
+  }
+
+  // apply Flanagan's equation
+  return (yr * ydi - yi * ydr) / (yr * yr + yi * yi) / 2.0 / M_PI;
+}
+
 // Pearson Correlation Coefficient
 static FP_TYPE corr_kernel_acf(
   FP_TYPE* x, FP_TYPE* xx, double* x1, double* x2, int w, int d) {
