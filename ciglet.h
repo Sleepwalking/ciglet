@@ -1143,10 +1143,12 @@ static inline FP_TYPE** be2ccgm(FP_TYPE** E, int nfrm, int nbe, int ncc, int wit
   return C;
 }
 
-FP_TYPE* cig_spec2env(FP_TYPE* S, int nfft, int fs, FP_TYPE f0, FP_TYPE* Cout);
+// estimate speech spectral envelope on a spectrum S of size nfft / 2 + 1
+// f0: ratio of fundamental frequency to sampling rate
+FP_TYPE* cig_spec2env(FP_TYPE* S, int nfft, FP_TYPE f0, FP_TYPE* Cout);
 
-static inline FP_TYPE* spec2env(FP_TYPE* S, int nfft, int fs, FP_TYPE f0, FP_TYPE* Cout) {
-  return cig_spec2env(S, nfft, fs, f0, Cout);
+static inline FP_TYPE* spec2env(FP_TYPE* S, int nfft, FP_TYPE f0, FP_TYPE* Cout) {
+  return cig_spec2env(S, nfft, f0, Cout);
 }
 
 typedef struct {
