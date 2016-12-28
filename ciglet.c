@@ -738,8 +738,8 @@ void cig_correlogram(FP_TYPE* x, int nx, int* center, int* nwin, int nfrm,
   for(int i = 0; i < nx; i ++)
     xx[i] = x[i] * x[i];
   for(int i = 0; i < nfrm; i ++) {
-    int t = center[i];
     int w = nwin[i];
+    int t = center[i] - w / 2;
     t = max(0, t);
     t = min(nx - 1, t);
     for(int d = 0; d < max_period; d ++)
