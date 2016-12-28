@@ -260,7 +260,7 @@ static void test_spectral(FP_TYPE* x, int nx, int fs, int nbit) {
 
   FP_TYPE** C = malloc2d(nfrm, nfft / 2 + 1, sizeof(FP_TYPE));
   for(int i = 0; i < nfrm; i ++) {
-    free(spec2env(Xm[i], nfft, fs, 250.0, C[i]));
+    free(spec2env(Xm[i], nfft, 250.0 / fs, C[i]));
   }
   FP_TYPE** Xm3 = cegm2spgm(C, nfrm, nfft, nfft / 2 + 1);
   if(! noplot) {
