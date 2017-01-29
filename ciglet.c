@@ -2,7 +2,7 @@
 ciglet
 ===
 
-Copyright (c) 2016, Kanru Hua
+Copyright (c) 2016-2017, Kanru Hua
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -309,21 +309,40 @@ FP_TYPE* cig_dct(FP_TYPE* x, int nx) {
 
 void cig_fft(FP_TYPE* xr, FP_TYPE* xi, FP_TYPE* yr, FP_TYPE* yi,
     int n, FP_TYPE* buffer, FP_TYPE mode) {
-  for(int i = 0; i < n; i ++) {
-    buffer[i * 2] = xr == NULL ? 0 : xr[i];
-    buffer[i * 2 + 1] = xi == NULL ? 0 : xi[i];
+  if(xr != NULL) {
+    for(int i = 0; i < n; i ++)
+      buffer[i * 2] = xr[i];
+  } else {
+    for(int i = 0; i < n; i ++) 
+      buffer[i * 2] = 0.0;
+  }
+  if(xi != NULL) {
+    for(int i = 0; i < n; i ++)
+      buffer[i * 2 + 1] = xi[i];
+  } else {
+    for(int i = 0; i < n; i ++) 
+      buffer[i * 2 + 1] = 0.0;
   }
   cdft(2 * n, mode, buffer);
-  if(mode < 0)
-    for(int i = 0; i < n; i ++) {
-      if(yr != NULL) yr[i] = buffer[i * 2];
-      if(yi != NULL) yi[i] = buffer[i * 2 + 1];
+  if(mode < 0) {
+    if(yr != NULL) {
+      for(int i = 0; i < n; i ++)
+        yr[i] = buffer[i * 2];
     }
-  else
-    for(int i = 0; i < n; i ++) {
-      if(yr != NULL) yr[i] = buffer[i * 2] / n;
-      if(yi != NULL) yi[i] = buffer[i * 2 + 1] / n;
+    if(yi != NULL) {
+      for(int i = 0; i < n; i ++)
+        yi[i] = buffer[i * 2 + 1];
     }
+  } else {
+    if(yr != NULL) {
+      for(int i = 0; i < n; i ++)
+        yr[i] = buffer[i * 2] / n;
+    }
+    if(yi != NULL) {
+      for(int i = 0; i < n; i ++)
+        yi[i] = buffer[i * 2 + 1] / n;
+    }
+  }
 }
 
 void cig_idft(FP_TYPE* xr, FP_TYPE* xi, FP_TYPE* yr, FP_TYPE* yi, int n) {
