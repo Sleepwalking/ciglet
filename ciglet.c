@@ -127,8 +127,12 @@ FP_TYPE* cig_sort(FP_TYPE* x, int nx, int* outidx) {
 }
 
 FP_TYPE cig_medianfp(FP_TYPE* x, int nx) {
-  return nx % 2 == 1 ? cig_qselect(x, nx, nx / 2) :
-    (cig_qselect(x, nx, nx / 2 - 1) + cig_qselect(x, nx, nx / 2)) * 0.5;
+  FP_TYPE* x_ = malloc(nx * sizeof(FP_TYPE));
+  memcpy(x_, x, nx * sizeof(FP_TYPE));
+  FP_TYPE ret = nx % 2 == 1 ? cig_qselect(x_, nx, nx / 2) :
+    (cig_qselect(x_, nx, nx / 2 - 1) + cig_qselect(x_, nx, nx / 2)) * 0.5;
+  free(x_);
+  return ret;
 }
 
 FP_TYPE* cig_xcorr(FP_TYPE* x, FP_TYPE* y, int nx, int maxlag) {
