@@ -8,18 +8,19 @@ OBJS = ciglet.o fftsg.o fastmedian.o wavfile.o
 default: libciglet.a
 
 test: ciglet-test
+	./ciglet-test noplot
+
 test-fft: ciglet-test-fft
+	./ciglet-test-fft
 
 single-file: single-file/ciglet.c single-file/ciglet.h
 	$(CC) $(CFLAGS) -o single-file/ciglet.o -c single-file/ciglet.c -Wno-unused-result
 
 ciglet-test: libciglet.a test/test.c
 	$(CC) $(CFLAGS) test/test.c libciglet.a -o ciglet-test -lm
-	./ciglet-test noplot
 
 ciglet-test-fft: libciglet.a test/test-fft.c
 	$(CC) $(CFLAGS) test/test-fft.c libciglet.a -o ciglet-test-fft -lm
-	./ciglet-test-fft
 
 libciglet.a: $(OBJS)
 	$(AR) $(ARFLAGS) libciglet.a $(OBJS)
