@@ -28,9 +28,13 @@ static void test_la() {
     8, 14, 20, 21, 2,
     15, 16, 22, 3, 9
   };
+  FP_TYPE b[5] = {-63, 84, 21, 73, 15};
   print_mat(A, n, n);
-  FP_TYPE* Acpy = calloc(n * n, sizeof(FP_TYPE));
-  for(int i = 0; i < n * n; i ++) Acpy[i] = A[i];
+  FP_TYPE* Acpy = zeros(n, n);
+  FP_TYPE* Acpy2 = zeros(n, n);
+  FP_TYPE* I = eye(n);
+  for(int i = 0; i < n * n; i ++) Acpy2[i] = Acpy[i] = A[i];
+
   int* permidx = ppivot(A, n);
   printf("Permutation: ");
   for(int i = 0; i < n; i ++)
@@ -38,13 +42,36 @@ static void test_la() {
   printf("\n");
   print_mat(A, n, n);
   printf("permm:\n");
+
   permm(Acpy, permidx, n, n);
   print_mat(Acpy, n, n);
+
   lu(A, n);
   printf("LU:\n");
   print_mat(A, n, n);
 
+  permv(b, permidx, n);
+  lusolve(A, b, n);
+  printf("Solution: ");
+  for(int i = 0; i < n; i ++)
+    printf("%6.3f ", b[i]);
+  printf("\n");
+
+  FP_TYPE c[5];
+  mvecmul(Acpy2, b, c, n, n);
+  printf("mvecmul: ");
+  for(int i = 0; i < n; i ++)
+    printf("%6.3f ", c[i]);
+  printf("\n");
+
+  FP_TYPE* B = zeros(n, n);
+  matmul(Acpy2, I, B, n, n, n);
+  printf("matmul:\n");
+  print_mat(B, n, n);
+
+  free(I); free(B);
   free(Acpy);
+  free(Acpy2);
   free(permidx);
 }
 
@@ -372,14 +399,16 @@ int main(int argc, char* argv[]) {
     test_la();
   if(lf_on)
     test_lf();
-
+  if(numerical_on)
+    test_numerical();
+  
   int fs, nx, nbit;
-  FP_TYPE* x = test_wav(& fs, & nx, & nbit);
+  FP_TYPE* x = NULL;
+  if(if_on + lpc_on + lpcwave_on + corr_on + spec_on > 0)
+    x = test_wav(& fs, & nx, & nbit);
 
   if(if_on)
     test_if(x, nx, fs);
-  if(numerical_on)
-    test_numerical();
   if(lpc_on)
     test_lpc(x, nx, fs);
   if(lpcwave_on)

@@ -24,13 +24,19 @@ Function index
 ### Vector operations and statistics
 
 * vectorized arithmetics: `sumfp`, `sumsqrfp`, `maxfp`, `minfp`
-* non-parameteric statistics: `meanfp`, `varfp`, `medianfp`, `xcorr`, `corr`, `cov`
+* descriptive statistics: `meanfp`, `varfp`, `medianfp`, `xcorr`, `corr`, `cov`
 * sorting: `selectnth`, `sort`
 * peak picking: `find_peak`, `find_valley`
 
 ### Numerical routines
 
 `fzero`, `polyval`, `roots`
+
+### Basic linear algebra
+
+* products: `matmul`, `mvecmul`, `dot`
+* solving a linear system: `lu`, `lusolve`
+* pivoting: `ppivot`, `permm`, `permv`
 
 ### Memory (de)allocation
 

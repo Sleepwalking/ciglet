@@ -445,13 +445,25 @@ static inline void lusolve(FP_TYPE* LU, FP_TYPE* b, int n) {
   cig_lusolve(LU, b, n);
 }
 
+void cig_matmul(FP_TYPE* A, FP_TYPE* B, FP_TYPE* C, int m, int n, int l);
+void cig_mvecmul(FP_TYPE* A, FP_TYPE* x, FP_TYPE* b, int m, int n);
+
 // A (m x n) times B (n * l) -> C (m * l)
-static inline void matmul(FP_TYPE* A, FP_TYPE* B, FP_TYPE* C, int m, int n, int l);
+static inline void matmul(FP_TYPE* A, FP_TYPE* B, FP_TYPE* C, int m, int n, int l) {
+  cig_matmul(A, B, C, m, n, l);
+}
 
 // A (m x n) times x (n * 1) -> b (m * 1)
-static inline void mvecmul(FP_TYPE* A, FP_TYPE* x, FP_TYPE* b, int m, int n);
+static inline void mvecmul(FP_TYPE* A, FP_TYPE* x, FP_TYPE* b, int m, int n) {
+  cig_mvecmul(A, x, b, n, n);
+}
 
-static inline FP_TYPE dot(FP_TYPE* x, FP_TYPE* y, int n);
+static inline FP_TYPE dot(FP_TYPE* x, FP_TYPE* y, int n) {
+  FP_TYPE sum = 0;
+  for(int i = 0; i < n; i ++)
+    sum += x[i] * y[i];
+  return sum;
+}
 
 // === Audio I/O ===
 

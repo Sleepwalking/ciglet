@@ -302,6 +302,29 @@ void cig_lusolve(FP_TYPE* LU, FP_TYPE* b, int n) {
   }
 }
 
+// m x n, n * l -> m * l
+// i   j  j   k    i   k
+void cig_matmul(FP_TYPE* A, FP_TYPE* B, FP_TYPE* C, int m, int n, int l) {
+  for(int k = 0; k < l; k ++) {
+    // k-th column in C is the sum of columns in A, weighted by k-th column in B
+    for(int i = 0; i < m; i ++) C[i + k * m] = 0;
+    for(int j = 0; j < n; j ++) {
+      FP_TYPE b = B[j + k * n];
+      for(int i = 0; i < m; i ++)
+        C[i + k * m] += b * A[i + j * m];
+    }
+  }
+}
+
+void cig_mvecmul(FP_TYPE* A, FP_TYPE* x, FP_TYPE* b, int m, int n) {
+  for(int i = 0; i < m; i ++) b[i] = 0;
+  for(int j = 0; j < n; j ++) {
+    FP_TYPE xj = x[j];
+    for(int i = 0; i < m; i ++)
+      b[i] += xj * A[i + j * m];
+  }
+}
+
 // orient: 1 (maximum) or -1 (minimum)
 int cig_find_peak(FP_TYPE* x, int lidx, int uidx, int orient) {
   FP_TYPE max = x[lidx] * orient;
