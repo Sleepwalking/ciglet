@@ -288,6 +288,20 @@ void cig_lu(FP_TYPE* A, int n) {
   }
 }
 
+void cig_lusolve(FP_TYPE* LU, FP_TYPE* b, int n) {
+  // Solve Ly = b
+  for(int j = 0; j < n; j ++) {
+    for(int i = j + 1; i < n; i ++)
+      b[i] -= LU[i + j * n] * b[j];
+  }
+  // Solve Ux = y
+  for(int j = n - 1; j >= 0; j --) {
+    b[j] /= LU[j + j * n];
+    for(int i = 0; i < j; i ++)
+      b[i] -= LU[i + j * n] * b[j];
+  }
+}
+
 // orient: 1 (maximum) or -1 (minimum)
 int cig_find_peak(FP_TYPE* x, int lidx, int uidx, int orient) {
   FP_TYPE max = x[lidx] * orient;

@@ -417,7 +417,7 @@ void cig_permm(FP_TYPE* A, int* perm, int m, int n);
 void cig_lu(FP_TYPE* A, int n);
 
 // In-place LU substitution, modifies b into x.
-void cig_lusolve(FP_TYPE* LU, int n, FP_TYPE* b);
+void cig_lusolve(FP_TYPE* LU, FP_TYPE* b, int n);
 
 static inline int* ppivot(FP_TYPE* A, int n) {
   return cig_ppivot(A, n);
@@ -427,15 +427,29 @@ static inline void permm(FP_TYPE* A, int* perm, int m, int n) {
   cig_permm(A, perm, m, n);
 }
 
+// In-place vector permutation
+static inline void permv(FP_TYPE* x, int* perm, int n) {
+  for(int i = 0; i < n; i ++) {
+    int permidx = perm[i];
+    FP_TYPE tmp = x[i];
+    x[i] = x[permidx];
+    x[permidx] = tmp;
+  }
+}
+
 static inline void lu(FP_TYPE* A, int n) {
   cig_lu(A, n);
 }
 
+static inline void lusolve(FP_TYPE* LU, FP_TYPE* b, int n) {
+  cig_lusolve(LU, b, n);
+}
+
 // A (m x n) times B (n * l) -> C (m * l)
-static inline void matmul(FP_TYPE* A, int m, int n, FP_TYPE* B, int l, FP_TYPE* C);
+static inline void matmul(FP_TYPE* A, FP_TYPE* B, FP_TYPE* C, int m, int n, int l);
 
 // A (m x n) times x (n * 1) -> b (m * 1)
-static inline void mvecmul(FP_TYPE* A, int m, int n, FP_TYPE* x, FP_TYPE* b);
+static inline void mvecmul(FP_TYPE* A, FP_TYPE* x, FP_TYPE* b, int m, int n);
 
 static inline FP_TYPE dot(FP_TYPE* x, FP_TYPE* y, int n);
 
