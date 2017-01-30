@@ -387,6 +387,58 @@ void** cig_transpose(void** ptr, size_t m, size_t n, size_t size);
 
 #define transpose(ptr, m, n, size) (void*)cig_transpose((void**)(ptr), m, n, size)
 
+// === Basic Linear Algebra ===
+
+/*
+  Matrices are column-major, to be consistent with Matlab/Octave.
+
+  indexing for MxN matrix A
+    A(i, j) = A[i + j * M]
+*/
+
+static inline FP_TYPE* zeros(int m, int n) {
+  return calloc(m * n, sizeof(FP_TYPE));
+}
+
+static inline FP_TYPE* eye(int n) {
+  FP_TYPE* A = zeros(n, n);
+  for(int i = 0; i < n; i ++)
+    A[i + n * i] = 1.0;
+  return A;
+}
+
+// In-place partial pivoting, allocates & returns permutation vector.
+int* cig_ppivot(FP_TYPE* A, int n);
+
+// In-place row permutation.
+void cig_permm(FP_TYPE* A, int* perm, int m, int n);
+
+// In-place LU decomposition, need pivoting first.
+void cig_lu(FP_TYPE* A, int n);
+
+// In-place LU substitution, modifies b into x.
+void cig_lusolve(FP_TYPE* LU, int n, FP_TYPE* b);
+
+static inline int* ppivot(FP_TYPE* A, int n) {
+  return cig_ppivot(A, n);
+}
+
+static inline void permm(FP_TYPE* A, int* perm, int m, int n) {
+  cig_permm(A, perm, m, n);
+}
+
+static inline void lu(FP_TYPE* A, int n) {
+  cig_lu(A, n);
+}
+
+// A (m x n) times B (n * l) -> C (m * l)
+static inline void matmul(FP_TYPE* A, int m, int n, FP_TYPE* B, int l, FP_TYPE* C);
+
+// A (m x n) times x (n * 1) -> b (m * 1)
+static inline void mvecmul(FP_TYPE* A, int m, int n, FP_TYPE* x, FP_TYPE* b);
+
+static inline FP_TYPE dot(FP_TYPE* x, FP_TYPE* y, int n);
+
 // === Audio I/O ===
 
 FP_TYPE* wavread(char* filename, int* fs, int* nbit, int* nx);

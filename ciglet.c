@@ -235,6 +235,59 @@ cplx* cig_roots(cplx* poly, int np) {
   return r1;
 }
 
+int* cig_ppivot(FP_TYPE* A, int n) {
+  int* permidx = malloc(n * sizeof(int));
+  for(int i = 0; i < n; i ++) {
+    // compare diagonal entry with the rest in the same column
+    int maxrow = i; FP_TYPE maxval = 0;
+    for(int j = i; j < n; j ++)
+      if(fabs(A[j + i * n]) > maxval) {
+        maxval = fabs(A[j + i * n]);
+        maxrow = j;
+      }
+    permidx[i] = maxrow;
+    if(maxrow != i) { // exchange row i with row maxrow
+      for(int j = 0; j < n; j ++) {
+        FP_TYPE tmp = A[i + j * n];
+        A[i + j * n] = A[maxrow + j * n];
+        A[maxrow + j * n] = tmp;
+      }
+    }
+  }
+  return permidx;
+}
+
+void cig_permm(FP_TYPE* A, int* perm, int m, int n) {
+  for(int i = 0; i < m; i ++) {
+    int permrow = perm[i];
+    if(permrow != i) { // exchange row i with row perm[i]
+      for(int j = 0; j < n; j ++) {
+        FP_TYPE tmp = A[i + j * n];
+        A[i + j * n] = A[permrow + j * n];
+        A[permrow + j * n] = tmp;
+      }
+    }
+  }
+}
+
+void cig_lu(FP_TYPE* A, int n) {
+  for(int i = 0; i < n; i ++) {
+    for(int j = 0; j < n; j ++) {
+      if(j >= i) { // U
+        FP_TYPE udotl = 0;
+        for(int k = 0; k < i; k ++)
+          udotl += A[k + j * n] * A[i + k * n];
+        A[i + j * n] -= udotl;
+      } else { // L
+        FP_TYPE udotl = 0;
+        for(int k = 0; k < j; k ++)
+          udotl += A[k + j * n] * A[i + k * n];
+        A[i + j * n] = (A[i + j * n] - udotl) / A[j + j * n];
+      }
+    }
+  }
+}
+
 // orient: 1 (maximum) or -1 (minimum)
 int cig_find_peak(FP_TYPE* x, int lidx, int uidx, int orient) {
   FP_TYPE max = x[lidx] * orient;

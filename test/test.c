@@ -11,6 +11,43 @@ static void test_statistics() {
   free(rand2);
 }
 
+static void print_mat(FP_TYPE* A, int m, int n) {
+  for(int i = 0; i < m; i ++) {
+    for(int j = 0; j < n; j ++)
+      printf("%6.3f, ", A[i + j * n]);
+    printf("\n");
+  }
+}
+
+static void test_la() {
+  int n = 5;
+  FP_TYPE A[25] = { // magic(5)
+    17, 23, 4, 10, 11,
+    24, 5, 6, 12, 18,
+    1, 7, 13, 19, 25,
+    8, 14, 20, 21, 2,
+    15, 16, 22, 3, 9
+  };
+  print_mat(A, n, n);
+  FP_TYPE* Acpy = calloc(n * n, sizeof(FP_TYPE));
+  for(int i = 0; i < n * n; i ++) Acpy[i] = A[i];
+  int* permidx = ppivot(A, n);
+  printf("Permutation: ");
+  for(int i = 0; i < n; i ++)
+    printf("%d ", permidx[i]);
+  printf("\n");
+  print_mat(A, n, n);
+  printf("permm:\n");
+  permm(Acpy, permidx, n, n);
+  print_mat(Acpy, n, n);
+  lu(A, n);
+  printf("LU:\n");
+  print_mat(A, n, n);
+
+  free(Acpy);
+  free(permidx);
+}
+
 static void test_numerical() {
   int order = 20;
   FP_TYPE* a = calloc(order + 1, sizeof(FP_TYPE));
@@ -286,6 +323,7 @@ static void test_spectral(FP_TYPE* x, int nx, int fs, int nbit) {
 
 int main(int argc, char* argv[]) {
   int stat_on = 0;
+  int la_on = 0;
   int lf_on = 0;
   int if_on = 0;
   int numerical_on = 0;
@@ -299,6 +337,9 @@ int main(int argc, char* argv[]) {
   if(argc >= 3 && (strcmp(argv[2], "all"))) {
     if(! strcmp(argv[2], "statistics"))
       stat_on = 1;
+    else
+    if(! strcmp(argv[2], "la"))
+      la_on = 1;
     else
     if(! strcmp(argv[2], "lf"))
       lf_on = 1;
@@ -321,11 +362,14 @@ int main(int argc, char* argv[]) {
     if(! strcmp(argv[2], "spec"))
       spec_on = 1;
   } else {
-    stat_on = lf_on = if_on = numerical_on = lpc_on = lpcwave_on = corr_on = spec_on = 1;
+    stat_on = la_on = lf_on = if_on = numerical_on = lpc_on =
+      lpcwave_on = corr_on = spec_on = 1;
   }
 
   if(stat_on)
     test_statistics();
+  if(la_on)
+    test_la();
   if(lf_on)
     test_lf();
 
