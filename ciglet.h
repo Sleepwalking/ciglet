@@ -797,6 +797,24 @@ static inline FP_TYPE* filtfilt(FP_TYPE* b, int nb, FP_TYPE* a, int na,
   return y;
 }
 
+// 1d time-varying Kalman filtering, returns E[x_t | z_1, ..., z_t];
+//   writes Var[x_t | z_1, ..., z_t] into P;
+//   writes total log likelihood into L if L != NULL
+FP_TYPE* cig_kalmanf1d(FP_TYPE* z, FP_TYPE* Q, FP_TYPE* R, int nz, FP_TYPE x0,
+  FP_TYPE* P, FP_TYPE* L);
+
+static inline FP_TYPE* kalmanf1d(FP_TYPE* z, FP_TYPE* Q, FP_TYPE* R, int nz,
+  FP_TYPE* P, FP_TYPE* L) {
+  return cig_kalmanf1d(z, Q, R, nz, z[0], P, L);
+}
+
+// 1d time-varying Kalman smoothing, returns E[x_t | z_1, ..., z_T]
+FP_TYPE* cig_kalmans1d(FP_TYPE* y, FP_TYPE* P, FP_TYPE* Q, int ny);
+
+static inline FP_TYPE* kalmans1d(FP_TYPE* y, FP_TYPE* P, FP_TYPE* Q, int ny) {
+  return cig_kalmans1d(y, P, Q, ny);
+}
+
 // The following lists different forms of an all-pole filter, which might be helpful
 //   when using LPC-related functions.
 // a[0] x[n] = u[n] - a[1] x[n - 1] - a[2] x[n - 2] - a[3] x[n - 3] - ...      recurrent form
@@ -998,6 +1016,7 @@ FP_TYPE* cig_rresample(FP_TYPE* x, int nx, FP_TYPE ratio, int* ny);
 static inline FP_TYPE* rresample(FP_TYPE* x, int nx, FP_TYPE ratio, int* ny) {
   return cig_rresample(x, nx, ratio, ny);
 }
+
 
 // === Audio/speech processing routines ===
 

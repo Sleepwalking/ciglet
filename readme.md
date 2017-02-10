@@ -54,7 +54,7 @@ Function index
 * phase manipulation: `wrap`, `unwrap`, `phase_diff`
 * complex number conversion: `abscplx`, `argcplx`, `polar2real`, `polar2imag`, `complete_symm`, `complete_asymm`
 * cepstral analysis: `rceps`, `irceps`, `minphase`
-* filtering: `fir1`, `conv`, `filter`, `filtfilt`, `moving_avg`, `moving_rms`, `medfilt1`
+* filtering: `fir1`, `conv`, `filter`, `filtfilt`, `moving_avg`, `moving_rms`, `medfilt1`, `kalmanf1d`, `kalmans1d`
 * linear prediction: `levinson`, `lpc`, `flpc`, `lpgain`, `lpspec`, `lpresf`
 * interpolation: `interp1`, `interp1u`, `sincinterp1u`, `rresample`
 * operations on sinusoids: `gensin`, `gensins`, `safe_aliased_sinc`, `safe_aliased_dsinc`

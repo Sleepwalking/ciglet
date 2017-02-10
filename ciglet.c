@@ -626,6 +626,42 @@ FP_TYPE* cig_filter(FP_TYPE* b, int nb, FP_TYPE* a, int na, FP_TYPE* x, int nx) 
   return y;
 }
 
+FP_TYPE* cig_kalmanf1d(FP_TYPE* z, FP_TYPE* Q, FP_TYPE* R, int nz, FP_TYPE x0,
+  FP_TYPE* P, FP_TYPE* L_) {
+  FP_TYPE* x = calloc(nz, sizeof(FP_TYPE));
+  FP_TYPE  xpred = x0;
+  FP_TYPE  Ppred = Q[0];
+  FP_TYPE  L = 0;
+  for(int t = 0; t < nz; t ++) {
+    if(t != 0) {
+      Ppred = P[t - 1] + Q[t];
+      xpred = x[t - 1];
+    }
+    
+    FP_TYPE e_t = z[t] - xpred;
+    FP_TYPE P_e_t = Ppred + R[t];
+    FP_TYPE K_t = Ppred / P_e_t;
+    
+    x[t] = xpred + K_t * e_t;
+    P[t] = Ppred - K_t * Ppred;
+    L += - 0.5 * log_2(2.0 * M_PI * P_e_t) - 0.5 * e_t * e_t / P_e_t;
+  }
+  if(L_ != NULL) *L_ = L;
+  return x;
+}
+
+FP_TYPE* cig_kalmans1d(FP_TYPE* y, FP_TYPE* P, FP_TYPE* Q, int ny) {
+  FP_TYPE* x = calloc(ny, sizeof(FP_TYPE));
+  FP_TYPE xbackward = y[ny - 1];
+  for(int t = ny - 1; t > 0; t --) {
+    x[t] = xbackward;
+    FP_TYPE J_t = P[t - 1] / (P[t - 1] + Q[t]);
+    xbackward = y[t - 1] + J_t * (xbackward - y[t - 1]);
+  }
+  x[0] = xbackward;
+  return x;
+}
+
 static FP_TYPE interp_kernel(FP_TYPE x, FP_TYPE a) {
   if(x == 0) return 1;
   if(x > a || x < -a) return 0;
