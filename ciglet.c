@@ -695,7 +695,7 @@ FP_TYPE* cig_interpu(FP_TYPE xi0, FP_TYPE xi1, FP_TYPE* yi, int ni, FP_TYPE* x, 
   }
   for(end = nx - 1; end > begin; end --) {
     FP_TYPE srcidx = (x[end] - xi0) / (xi1 - xi0) * ni;
-    if(srcidx + 1.0 < ni) break;
+    if(srcidx + 1.01 < ni) break;
     y[end] = yi[ni - 1];
   }
   for(int i = begin; i <= end; i ++) {
