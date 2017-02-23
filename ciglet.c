@@ -875,6 +875,14 @@ static FP_TYPE corr_kernel_amdf(
   return a;
 }
 
+static FP_TYPE corr_kernel_sqrdiff(
+  FP_TYPE* x, FP_TYPE* xx, double* x1, double* x2, int w, int d) {
+  FP_TYPE a = 0;
+  for(int i = 0; i < w; i ++)
+    a += (x[i] - x[i + d]) * (x[i] - x[i + d]);
+  return a;
+}
+
 void cig_correlogram(FP_TYPE* x, int nx, int* center, int* nwin, int nfrm,
   int max_period, int method, FP_TYPE** R) {
   double* x1 = calloc(nx + 1, sizeof(double)); // integrate x[i]
@@ -891,14 +899,30 @@ void cig_correlogram(FP_TYPE* x, int nx, int* center, int* nwin, int nfrm,
     int t = center[i] - w / 2;
     t = max(0, t);
     t = min(nx - 1, t);
-    for(int d = 0; d < max_period; d ++)
-      if(t + w + d < nx) {
-        if(method == CIG_CORR_ACF)
-          R[i][d] = corr_kernel_acf(x + t, xx + t, x1 + t, x2 + t, w, d);
-        else if(method == CIG_CORR_AMDF)
-          R[i][d] = corr_kernel_amdf(x + t, xx + t, x1 + t, x2 + t, w, d);
-      } else
-        R[i][d] = 0;
+    if(method == CIG_CORR_YIN) {
+      R[i][0] = 1.0;
+      FP_TYPE cumm = 0;
+      for(int d = 1; d < max_period; d ++) {
+        if(t + w + d < nx) {
+          FP_TYPE ac = corr_kernel_sqrdiff(x + t, xx + t, x1 + t, x2 + t, w, d);
+          ac = max(ac, 1e-10);
+          cumm += ac;
+          R[i][d] = ac * d / cumm;
+        } else
+          R[i][d] = 1.0;
+      }
+    } else
+      for(int d = 0; d < max_period; d ++) {
+        if(t + w + d < nx) {
+          if(method == CIG_CORR_ACF)
+            R[i][d] = corr_kernel_acf(x + t, xx + t, x1 + t, x2 + t, w, d);
+          else if(method == CIG_CORR_AMDF)
+            R[i][d] = corr_kernel_amdf(x + t, xx + t, x1 + t, x2 + t, w, d);
+          else if(method == CIG_CORR_SQRDIFF)
+            R[i][d] = corr_kernel_sqrdiff(x + t, xx + t, x1 + t, x2 + t, w, d);
+        } else
+          R[i][d] = 0;
+      }
   }
   free(x1);
   free(x2);

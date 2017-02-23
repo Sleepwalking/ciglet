@@ -1092,8 +1092,10 @@ static inline FP_TYPE* melspace(FP_TYPE fmin, FP_TYPE fmax, int n) {
   return freq;
 }
 
-#define CIG_CORR_ACF    0
-#define CIG_CORR_AMDF   1
+#define CIG_CORR_ACF     0
+#define CIG_CORR_AMDF    1
+#define CIG_CORR_SQRDIFF 2
+#define CIG_CORR_YIN     3
 
 // size of R: nfrm x max_period
 void cig_correlogram(FP_TYPE* x, int nx, int* center, int* nwin, int nfrm,
