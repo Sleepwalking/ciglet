@@ -338,6 +338,18 @@ int cig_find_peak(FP_TYPE* x, int lidx, int uidx, int orient) {
   return max_idx;
 }
 
+// orient: 1 (maximum) or -1 (minimum)
+int cig_find_extrema(FP_TYPE* x, int lidx, int uidx, int orient) {
+  FP_TYPE max = x[lidx] * orient;
+  FP_TYPE max_idx = lidx;
+  for(int i = lidx; i <= uidx; i ++)
+    if(x[i] * orient > max) {
+      max = x[i] * orient;
+      max_idx = i;
+    }
+  return max_idx;
+}
+
 FP_TYPE* cig_gensins(FP_TYPE* freq, FP_TYPE* ampl, FP_TYPE* phse,
   int nsin, int fs, int n) {
   FP_TYPE* x = calloc(n, sizeof(FP_TYPE));

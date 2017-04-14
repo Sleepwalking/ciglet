@@ -273,13 +273,22 @@ static inline FP_TYPE corr(FP_TYPE* x, FP_TYPE* y, int nx) {
 }
 
 int cig_find_peak(FP_TYPE* x, int lidx, int uidx, int orient);
+int cig_find_extrema(FP_TYPE* x, int lidx, int uidx, int orient);
 
-static inline FP_TYPE find_peak(FP_TYPE* x, int lidx, int uidx) {
+static inline int find_peak(FP_TYPE* x, int lidx, int uidx) {
   return cig_find_peak(x, lidx, uidx, 1);
 }
 
-static inline FP_TYPE find_valley(FP_TYPE* x, int lidx, int uidx) {
+static inline int find_valley(FP_TYPE* x, int lidx, int uidx) {
   return cig_find_peak(x, lidx, uidx, -1);
+}
+
+static inline int find_maxima(FP_TYPE* x, int lidx, int uidx) {
+  return cig_find_extrema(x, lidx, uidx, 1);
+}
+
+static inline int find_minima(FP_TYPE* x, int lidx, int uidx) {
+  return cig_find_extrema(x, lidx, uidx, -1);
 }
 
 // === Numerical routines ===

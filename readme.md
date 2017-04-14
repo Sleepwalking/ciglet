@@ -26,7 +26,7 @@ Function index
 * vectorized arithmetics: `sumfp`, `sumsqrfp`, `maxfp`, `minfp`
 * descriptive statistics: `meanfp`, `varfp`, `medianfp`, `xcorr`, `corr`, `cov`
 * sorting: `selectnth`, `sort`
-* peak picking: `find_peak`, `find_valley`
+* peak picking: `find_peak`, `find_valley`, `find_maxima`, `find_minima`
 
 ### Numerical routines
 
