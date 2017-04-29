@@ -144,22 +144,60 @@ FP_TYPE* cig_xcorr(FP_TYPE* x, FP_TYPE* y, int nx, int maxlag) {
   return R;
 }
 
-static int sign(FP_TYPE x) {
-  return x > 0.0 ? 1 : (x == 0.0 ? 0 : -1);
-}
-
-static FP_TYPE fzero_(fpe_one_to_one func, FP_TYPE xmin, FP_TYPE xmax, int depth, void* env) {
-  FP_TYPE xmean = (xmin + xmax) * 0.5;
-  FP_TYPE ymean = func(xmean, env);
-  if(fabs(ymean) < 1e-5 || depth > 100) return xmean;
-  FP_TYPE ymax = func(xmax, env);
-  if(sign(ymax) != sign(ymean)) return fzero_(func, xmean, xmax, depth + 1, env);
-  return fzero_(func, xmin, xmean, depth + 1, env);
-}
-
+// Brent's method (inverse quad interp + secant + bisection)
+// https://en.wikipedia.org/wiki/Brent%27s_method
 FP_TYPE cig_fzero(fpe_one_to_one func, FP_TYPE xmin, FP_TYPE xmax, void* env) {
-  if(sign(func(xmax, env)) == sign(func(xmin, env))) return 0;
-  return fzero_(func, xmin, xmax, 0, env);
+  const FP_TYPE eps = 1e-8;
+  FP_TYPE a, b, c, s, d;
+  FP_TYPE fa, fb, fc, fs;
+  a = xmin; b = xmax;
+  fa = func(a, env); fb = func(b, env);
+  if(fa * fb >= 0) return (a + b) / 2.0;
+  if(fabs(fa) < fabs(fb)) {
+    c = b; b = a; a = c;
+    fc = fb; fb = fa; fa = fc;
+  } else {
+    c = a;
+    fc = fa;
+  }
+  int mflag = 1;
+  int niter = 0;
+  while(fabs(fb) > eps && fabs(a - b) > eps) {
+    if(fa != fc && fb != fc) {
+      s = a * fb * fc / (fa - fb) / (fa - fc)
+        + b * fa * fc / (fb - fa) / (fb - fc)
+        + c * fa * fb / (fc - fa) / (fc - fb); // Inv. Quad Interpolation
+    } else {
+      s = b - fb * (b - a) / (fb - fa); // Secant
+    }
+    if((s < (3.0 * a + b) / 4.0 || s > b) ||
+       (mflag   && fabs(s - b) >= fabs(b - c) * 0.5) ||
+       (! mflag && fabs(s - b) >= fabs(c - d) * 0.5) ||
+       (mflag   && fabs(b - c) < eps) ||
+       (! mflag && fabs(c - d) < eps)) {
+      s = (a + b) / 2.0;
+      if(s == b || s == a) break; // maximum precision reached
+      mflag = 1;
+    } else {
+      mflag = 0;
+    }
+    fs = func(s, env);
+    d = c; c = b;
+    fc = fb;
+    if(fa * fs < 0) {
+      b = s;
+      fb = fs;
+    } else {
+      a = s;
+      fa = fs;
+    }
+    if(fabs(fa) < fabs(fb)) {
+      FP_TYPE x = b; b = a; a = x;
+      x = fb; fb = fa; fa = x;
+    }
+    niter ++;
+  }
+  return b;
 }
 
 cplx cig_polyval(cplx* poly, int np, cplx x) {
