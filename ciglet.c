@@ -1335,7 +1335,7 @@ static lfparam lfparam_from_lfmodel(lfmodel model) {
   ret.A = (1.0 - e_Te_T0) / (e * e * ret.Ta) + (ret.Te - ret.T0) * e_Te_T0 / (e * ret.Ta);
   ret.e = e;
   ret.a = fzero(afunc, 0.0, 1e9, & ret);
-  ret.E0 = -model.Ee / exp_3(ret.a * ret.Te) * ret.sin_wgTe;
+  ret.E0 = -model.Ee / (exp_3(ret.a * ret.Te) * ret.sin_wgTe);
   return ret;
 }
 
@@ -1402,7 +1402,7 @@ FP_TYPE* cig_lfmodel_period(lfmodel model, int fs, int n) {
   }
   for(; i < min(nT, n); i ++) {
     FP_TYPE t = (FP_TYPE)i / fs;
-    y[i] = - E0 / e / Ta * (exp_2(- e * (t - Te)) - exp_2(- e * (T0 - Te)));
+    y[i] = - model.Ee / e / Ta * (exp_2(- e * (t - Te)) - exp_2(- e * (T0 - Te)));
   }
   return y;
 }
