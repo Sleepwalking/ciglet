@@ -947,6 +947,29 @@ static inline FP_TYPE* sincinterp1u(FP_TYPE xi0, FP_TYPE xi1, FP_TYPE* yi, int n
   return cig_sincinterpu(xi0, xi1, yi, ni, x, nx);
 }
 
+// replace discontinuties in a series with interpolated values
+static inline FP_TYPE* interp_in_blank(FP_TYPE* x, int nx, FP_TYPE blank) {
+  FP_TYPE* x_sample = calloc(nx + 2, sizeof(FP_TYPE));
+  FP_TYPE* i_sample = calloc(nx + 2, sizeof(FP_TYPE));
+  int n = 1;
+  for(int i = 0; i < nx; i ++)
+    if(x[i] == blank || (isnan(x[i]) && isnan(blank))) {
+      x_sample[n] = x[i];
+      i_sample[n] = i;
+      n ++;
+    }
+  x_sample[0] = x_sample[1];
+  i_sample[0] = 0;
+  x_sample[n] = x_sample[n - 1];
+  i_sample[n] = nx;
+  FP_TYPE* yi = linspace(0, nx - 1, nx);
+  FP_TYPE* y = interp1(i_sample, x_sample, n + 2, yi, nx);
+  free(yi);
+  free(x_sample);
+  free(i_sample);
+  return y;
+}
+
 FP_TYPE* cig_medfilt(FP_TYPE* x, int nx, int order);
 
 static inline FP_TYPE* medfilt1(FP_TYPE* x, int nx, int order) {

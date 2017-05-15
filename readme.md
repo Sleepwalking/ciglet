@@ -56,7 +56,7 @@ Function index
 * cepstral analysis: `rceps`, `irceps`, `minphase`
 * filtering: `fir1`, `conv`, `filter`, `filtfilt`, `moving_avg`, `moving_rms`, `medfilt1`, `kalmanf1d`, `kalmans1d`
 * linear prediction: `levinson`, `lpc`, `flpc`, `lpgain`, `lpspec`, `lpresf`
-* interpolation: `interp1`, `interp1u`, `sincinterp1u`, `rresample`
+* interpolation: `interp1`, `interp1u`, `sincinterp1u`, `interp_in_blank`, `rresample`
 * operations on sinusoids: `gensin`, `gensins`, `safe_aliased_sinc`, `safe_aliased_dsinc`
 * miscellaneous: `fetch_frame`, `diff`, `cumsum`, `flip` ,`white_noise`, `itakura_saito`
 
