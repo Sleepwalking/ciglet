@@ -953,7 +953,7 @@ static inline FP_TYPE* interp_in_blank(FP_TYPE* x, int nx, FP_TYPE blank) {
   FP_TYPE* i_sample = calloc(nx + 2, sizeof(FP_TYPE));
   int n = 1;
   for(int i = 0; i < nx; i ++)
-    if(x[i] == blank || (isnan(x[i]) && isnan(blank))) {
+    if(x[i] != blank || (isnan(blank) && (! isnan(x[i])))) {
       x_sample[n] = x[i];
       i_sample[n] = i;
       n ++;
@@ -984,16 +984,24 @@ static inline FP_TYPE* white_noise(FP_TYPE amplitude, int n) {
 }
 
 static inline FP_TYPE* moving_avg(FP_TYPE* x, int nx, FP_TYPE halford) {
-  FP_TYPE* acc = malloc(nx * sizeof(FP_TYPE));
+  int ihalford = halford;
+  FP_TYPE* acc = malloc((nx + ihalford * 2) * sizeof(FP_TYPE));
 
   acc[0] = x[0];
-  for(int i = 1; i < nx; i ++) acc[i] = acc[i - 1] + x[i];
+  for(int i = 1; i <= ihalford; i ++)
+    acc[i] = acc[i - 1] + x[0];
+  for(int i = 1; i < nx; i ++)
+    acc[i + ihalford] = acc[i + ihalford - 1] + x[i];
+  for(int i = 0; i < ihalford; i ++)
+    acc[nx + ihalford + i] = acc[nx + ihalford + i - 1] + x[nx - 1];
 
   FP_TYPE* interp_idx = malloc(nx * sizeof(FP_TYPE));
-  for(int i = 0; i < nx; i ++) interp_idx[i] = i + halford;
-  FP_TYPE* interp_upper = interp1u(0, nx, acc, nx, interp_idx, nx);
-  for(int i = 0; i < nx; i ++) interp_idx[i] = i - halford;
-  FP_TYPE* interp_lower = interp1u(0, nx, acc, nx, interp_idx, nx);
+  for(int i = 0; i < nx; i ++) interp_idx[i] = i + ihalford;
+  FP_TYPE* interp_upper = interp1u(-halford, nx + ihalford, acc, nx + ihalford * 2,
+    interp_idx, nx);
+  for(int i = 0; i < nx; i ++) interp_idx[i] = i - ihalford;
+  FP_TYPE* interp_lower = interp1u(-halford, nx + ihalford, acc, nx + ihalford * 2,
+    interp_idx, nx);
 
   for(int i = 0; i < nx; i ++) {
     interp_upper[i] = (interp_upper[i] - interp_lower[i]) / halford * 0.5;
