@@ -75,6 +75,37 @@ static void test_la() {
   free(permidx);
 }
 
+static void test_czt() {
+  int n = 16;
+  FP_TYPE* xr = calloc(n, sizeof(FP_TYPE));
+  FP_TYPE* xi = calloc(n, sizeof(FP_TYPE));
+  FP_TYPE* yr = calloc(n, sizeof(FP_TYPE));
+  FP_TYPE* yi = calloc(n, sizeof(FP_TYPE));
+  FP_TYPE* yrfft = calloc(n, sizeof(FP_TYPE));
+  FP_TYPE* yifft = calloc(n, sizeof(FP_TYPE));
+  FP_TYPE* buff = calloc(n * 2, sizeof(FP_TYPE));
+  for(int i = 0; i < n; i ++) {
+    xr[i] = randn(0, 1);
+    xi[i] = randn(0, 1);
+  }
+  printf("Forward transform (CZT vs FFT):\n");
+  czt(xr, xi, yr, yi, 2 * M_PI / n, n);
+  fft(xr, xi, yrfft, yifft, n, buff);
+  for(int i = 0; i < n; i ++)
+    printf("%f\t%f\t%f\t%f\n", yr[i], yrfft[i], yi[i], yifft[i]);
+
+  printf("Inverse transform (ICZT vs original signal):\n");
+  FP_TYPE* ixr = calloc(n, sizeof(FP_TYPE));
+  FP_TYPE* ixi = calloc(n, sizeof(FP_TYPE));
+  iczt(yr, yi, ixr, ixi, 2 * M_PI / n, n);
+  for(int i = 0; i < n; i ++)
+    printf("%f\t%f\t%f\t%f\n", ixr[i], xr[i], ixi[i], xi[i]);
+
+  free(xr); free(xi); free(yr); free(yi);
+  free(yrfft); free(yifft); free(buff);
+  free(ixr); free(ixi);
+}
+
 static void test_numerical() {
   int order = 20;
   FP_TYPE* a = calloc(order + 1, sizeof(FP_TYPE));
@@ -353,6 +384,7 @@ int main(int argc, char* argv[]) {
   int la_on = 0;
   int lf_on = 0;
   int if_on = 0;
+  int czt_on = 0;
   int numerical_on = 0;
   int lpc_on = 0;
   int lpcwave_on = 0;
@@ -374,6 +406,9 @@ int main(int argc, char* argv[]) {
     if(! strcmp(argv[2], "if"))
       if_on = 1;
     else
+    if(! strcmp(argv[2], "czt"))
+      czt_on = 1;
+    else
     if(! strcmp(argv[2], "numerical"))
       numerical_on = 1;
     else
@@ -389,7 +424,7 @@ int main(int argc, char* argv[]) {
     if(! strcmp(argv[2], "spec"))
       spec_on = 1;
   } else {
-    stat_on = la_on = lf_on = if_on = numerical_on = lpc_on =
+    stat_on = la_on = lf_on = if_on = czt_on = numerical_on = lpc_on =
       lpcwave_on = corr_on = spec_on = 1;
   }
 
@@ -399,6 +434,8 @@ int main(int argc, char* argv[]) {
     test_la();
   if(lf_on)
     test_lf();
+  if(czt_on)
+    test_czt();
   if(numerical_on)
     test_numerical();
   

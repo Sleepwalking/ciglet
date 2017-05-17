@@ -50,7 +50,7 @@ Function index
 ### General DSP routines
 
 * windows: `boxcar`, `hanning`, `hamming`, `mltsine`, `blackman_harris`, `nuttall98`, `blackman`
-* Fourier transform: `fft`, `ifft`, `idft`, `dct`, `fftshift`
+* Fourier transform: `fft`, `ifft`, `czt`, `iczt`, `idft`, `dct`, `fftshift`
 * phase manipulation: `wrap`, `unwrap`, `phase_diff`
 * complex number conversion: `abscplx`, `argcplx`, `polar2real`, `polar2imag`, `complete_symm`, `complete_asymm`
 * cepstral analysis: `rceps`, `irceps`, `minphase`

@@ -617,6 +617,22 @@ static inline void ifft(FP_TYPE* xr, FP_TYPE* xi, FP_TYPE* yr, FP_TYPE* yi,
   cig_fft(xr, xi, yr, yi, n, buffer, 1.0);
 }
 
+void cig_czt(FP_TYPE* xr, FP_TYPE* xi, FP_TYPE* yr, FP_TYPE* yi, FP_TYPE omega0, int n);
+
+static inline void czt(FP_TYPE* xr, FP_TYPE* xi, FP_TYPE* yr, FP_TYPE* yi,
+  FP_TYPE omega0, int n) {
+  cig_czt(xr, xi, yr, yi, omega0, n);
+}
+
+static inline void iczt(FP_TYPE* xr, FP_TYPE* xi, FP_TYPE* yr, FP_TYPE* yi,
+  FP_TYPE omega0, int n) {
+  cig_czt(xr, xi, yr, yi, -omega0, n);
+  for(int i = 0; i < n; i ++) {
+    yr[i] /= n;
+    yi[i] /= n;
+  }
+}
+
 void cig_idft(FP_TYPE* xr, FP_TYPE* xi, FP_TYPE* yr, FP_TYPE* yi, int n);
 
 static inline void idft(FP_TYPE* xr, FP_TYPE* xi, FP_TYPE* yr, FP_TYPE* yi, int n) {
