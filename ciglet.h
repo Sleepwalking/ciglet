@@ -627,10 +627,12 @@ static inline void czt(FP_TYPE* xr, FP_TYPE* xi, FP_TYPE* yr, FP_TYPE* yi,
 static inline void iczt(FP_TYPE* xr, FP_TYPE* xi, FP_TYPE* yr, FP_TYPE* yi,
   FP_TYPE omega0, int n) {
   cig_czt(xr, xi, yr, yi, -omega0, n);
-  for(int i = 0; i < n; i ++) {
-    yr[i] /= n;
-    yi[i] /= n;
-  }
+  if(yr != NULL)
+    for(int i = 0; i < n; i ++)
+      yr[i] /= n;
+  if(yi != NULL)
+    for(int i = 0; i < n; i ++)
+      yi[i] /= n;
 }
 
 void cig_idft(FP_TYPE* xr, FP_TYPE* xi, FP_TYPE* yr, FP_TYPE* yi, int n);

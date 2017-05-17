@@ -492,18 +492,33 @@ void cig_czt(FP_TYPE* xr, FP_TYPE* xi, FP_TYPE* yr, FP_TYPE* yi,
   FP_TYPE* xq = buffer + 0;
   FP_TYPE* wq = buffer + 2 * m;
   FP_TYPE* Wq = buffer + 4 * m;
-  xq[0] = xr[0]; xq[1] = xi[0];
   Wq[0] = wq[0] = 1.0; Wq[1] = wq[1] = 0;
   for(int i = 1; i < n; i ++) {
     FP_TYPE phi = -0.5 * i * i * omega0;
     FP_TYPE Wr = cos_3(phi);
     FP_TYPE Wi = sin_3(phi);
-    xq[i * 2 + 0] = xr[i] * Wr - xi[i] * Wi;
-    xq[i * 2 + 1] = xr[i] * Wi + xi[i] * Wr;
     Wq[i * 2 + 0] = wq[i * 2 + 0] = Wr;
     Wq[i * 2 + 1] = wq[i * 2 + 1] = -Wi;
     Wq[(m - i) * 2 + 0] = wq[(m - i) * 2 + 0] = Wr;
     Wq[(m - i) * 2 + 1] = wq[(m - i) * 2 + 1] = -Wi;
+  }
+  if(xi != NULL) {
+    xq[1] = xi[0];
+    for(int i = 1; i < n; i ++) {
+      FP_TYPE Wr =   wq[i * 2 + 0];
+      FP_TYPE Wi = - wq[i * 2 + 1];
+      xq[i * 2 + 0] = - xi[i] * Wi;
+      xq[i * 2 + 1] =   xi[i] * Wr;
+    }
+  }
+  if(xr != NULL) {
+    xq[0] = xr[0];
+    for(int i = 1; i < n; i ++) {
+      FP_TYPE Wr =   wq[i * 2 + 0];
+      FP_TYPE Wi = - wq[i * 2 + 1];
+      xq[i * 2 + 0] += xr[i] * Wr;
+      xq[i * 2 + 1] += xr[i] * Wi;
+    }
   }
   cdft(2 * m, -1, xq);
   cdft(2 * m, -1, Wq);
@@ -514,9 +529,13 @@ void cig_czt(FP_TYPE* xr, FP_TYPE* xi, FP_TYPE* yr, FP_TYPE* yi,
     xq[i * 2 + 1] = yqi;
   }
   cdft(2 * m, 1, xq);
-  for(int i = 0; i < n; i ++) {
-    yr[i] = (  xq[i * 2 + 0] * wq[i * 2 + 0] + xq[i * 2 + 1] * wq[i * 2 + 1]) / m;
-    yi[i] = (- xq[i * 2 + 0] * wq[i * 2 + 1] + xq[i * 2 + 1] * wq[i * 2 + 0]) / m;
+  if(yr != NULL) {
+    for(int i = 0; i < n; i ++)
+      yr[i] = (  xq[i * 2 + 0] * wq[i * 2 + 0] + xq[i * 2 + 1] * wq[i * 2 + 1]) / m;
+  }
+  if(yi != NULL) {
+    for(int i = 0; i < n; i ++)
+      yi[i] = (- xq[i * 2 + 0] * wq[i * 2 + 1] + xq[i * 2 + 1] * wq[i * 2 + 0]) / m;
   }
   free(buffer);
 }
