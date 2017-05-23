@@ -39,7 +39,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 #include <malloc.h>
 #include <math.h>
-#include <unistd.h>
 
 #ifndef CIGLET_SINGLE_FILE
   #include "external/fastapprox-all.h"
@@ -378,7 +377,7 @@ static inline void free2d_(void** ptr, size_t m) {
 static inline void* flatten_(void** ptr, size_t m, size_t n, size_t size) {
   void* ret = malloc(size * m * n);
   for(size_t i = 0; i < m; i ++)
-    memcpy(ret + i * n * size, ptr[i], n * size);
+    memcpy((char*)ret + i * n * size, ptr[i], n * size);
   return ret;
 }
 
@@ -387,7 +386,7 @@ static inline void** reshape_(void* ptr, size_t m, size_t n, size_t size) {
   void** ret = malloc(m * sizeof(void*));
   for(size_t i = 0; i < m; i ++) {
     ret[i] = malloc(n * size);
-    memcpy(ret[i], ptr + i * n * size, n * size);
+    memcpy(ret[i], (char*)ptr + i * n * size, n * size);
   }
   return ret;
 }

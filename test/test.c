@@ -130,6 +130,7 @@ static void test_lf() {
     lfmagnresp[i] = log(lfmagnresp[i]);
   FP_TYPE* lfperiod = lfmodel_period(testlf, 44100, 500);
 
+# if _POSIX_C_SOURCE >= 2
   if(! noplot) {
     figure* lffg = plotopen();
     plot(lffg, freq, lfmagnresp, 200, 'b');
@@ -138,6 +139,7 @@ static void test_lf() {
     plot(lffg, NULL, lfperiod, 500, 'b');
     plotclose(lffg);
   }
+# endif
   free(freq);
   free(lfmagnresp);
   free(lfperiod);
@@ -174,11 +176,13 @@ static void test_if(FP_TYPE* x, int nx, int fs) {
     free(xi);
   }
   
+# if _POSIX_C_SOURCE >= 2
   if(! noplot) {
     figure* fg = plotopen();
     plot(fg, NULL, x_if, nfrm, 'b');
     plotclose(fg);
   }
+# endif
   free(x_if);
   cig_delete_ifdetector(ifd);
 }
@@ -223,11 +227,13 @@ static void test_lpc(FP_TYPE* x, int nx, int fs) {
     free(a);
     free(R);
   }
+# if _POSIX_C_SOURCE >= 2
   if(! noplot) {
     figure* fig = plotopen();
     imagesc(fig, Xm, nfrm, nfft / 2 + 1);
     plotclose(fig);
   }
+# endif
   free(faxis);
   free(faxis_warp);
   free2d(Xm, nfrm);
@@ -254,11 +260,13 @@ static void test_lpcwave(FP_TYPE* x, int nx, int fs) {
     free(a);
     free(xi);
   }
+# if _POSIX_C_SOURCE >= 2
   if(! noplot) {
     figure* fig = plotopen();
     imagesc(fig, Xm, nfrm, nfft / 2 + 1);
     plotclose(fig);
   }
+# endif
   free2d(Xm, nfrm);
 }
 
@@ -276,11 +284,13 @@ static void test_correlogram(FP_TYPE* x, int nx, int fs) {
   cig_correlogram(x, nx, center, nwin, nfrm, max_period, CIG_CORR_ACF, R);
   FP_TYPE* faxis = linspace(0, 999, 1000);
   FP_TYPE** Ri = cig_invcrgm(R, nfrm, max_period, fs, faxis, 1000);
+# if _POSIX_C_SOURCE >= 2
   if(! noplot) {
     figure* fig = plotopen();
     imagesc(fig, Ri, nfrm, 1000);
     plotclose(fig);
   }
+# endif
   free2d(Ri, nfrm);
   free2d(R, nfrm);
   free(faxis);
@@ -302,12 +312,14 @@ static void test_spectral(FP_TYPE* x, int nx, int fs, int nbit) {
   for(int i = 0; i < nfrm; i ++)
     Xmfcc[i] = be2cc(Xmfb[i], 36, 12, 0);
 
+# if _POSIX_C_SOURCE >= 2
   figure* fg = NULL;
   if(! noplot) {
     fg = plotopen();
     imagesc(fg, Xmfcc, nfrm, 12);
     plotclose(fg);
   }
+# endif
 
   printf("Selected content of Xmfcc:\n");
   for(int i = 0; i < nfrm; i += nfrm / 5) {
@@ -358,11 +370,13 @@ static void test_spectral(FP_TYPE* x, int nx, int fs, int nbit) {
     free(spec2env(Xm[i], nfft, 250.0 / fs, C[i]));
   }
   FP_TYPE** Xm3 = cegm2spgm(C, nfrm, nfft, nfft / 2 + 1);
+# if _POSIX_C_SOURCE >= 2
   if(! noplot) {
     fg = plotopen();
     imagesc(fg, Xm3, nfrm, nfft / 2 + 1);
     plotclose(fg);
   }
+# endif
 
   FP_TYPE* Xm3_flattened = flatten(Xm3, nfrm, nfft / 2 + 1, sizeof(FP_TYPE));
   FP_TYPE Xm3median = medianfp(Xm3_flattened, nfrm * (nfft / 2 + 1));
