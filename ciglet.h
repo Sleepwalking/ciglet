@@ -1013,10 +1013,10 @@ static inline FP_TYPE* moving_avg(FP_TYPE* x, int nx, FP_TYPE halford) {
     acc[nx + ihalford + i] = acc[nx + ihalford + i - 1] + x[nx - 1];
 
   FP_TYPE* interp_idx = malloc(nx * sizeof(FP_TYPE));
-  for(int i = 0; i < nx; i ++) interp_idx[i] = i + ihalford;
+  for(int i = 0; i < nx; i ++) interp_idx[i] = i + halford;
   FP_TYPE* interp_upper = interp1u(-halford, nx + ihalford, acc, nx + ihalford * 2,
     interp_idx, nx);
-  for(int i = 0; i < nx; i ++) interp_idx[i] = i - ihalford;
+  for(int i = 0; i < nx; i ++) interp_idx[i] = i - halford;
   FP_TYPE* interp_lower = interp1u(-halford, nx + ihalford, acc, nx + ihalford * 2,
     interp_idx, nx);
 
