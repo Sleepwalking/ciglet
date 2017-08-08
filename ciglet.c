@@ -1362,7 +1362,7 @@ FP_TYPE* cig_filterbank_spectrum(filterbank* fbank, FP_TYPE* S, int nfft, int fs
 
 // Morise, Masanori. "Cheaptrick, a spectral envelope estimator for high-quality
 //   speech synthesis." Speech Communication 67 (2015): 1-7.
-FP_TYPE* cig_spec2env(FP_TYPE* S, int nfft, FP_TYPE f0, FP_TYPE* Cout) {
+FP_TYPE* cig_spec2env(FP_TYPE* S, int nfft, FP_TYPE f0, int nhar, FP_TYPE* Cout) {
   FP_TYPE* buff = malloc(nfft * 4 * sizeof(FP_TYPE));
   FP_TYPE* V = buff;
   FP_TYPE* C = buff + nfft;
@@ -1373,6 +1373,9 @@ FP_TYPE* cig_spec2env(FP_TYPE* S, int nfft, FP_TYPE f0, FP_TYPE* Cout) {
   int kf0 = ceil(f0 * nfft);
   for(int i = 0; i < kf0 / 2; i ++) V[i] = V[kf0 - i];
   FP_TYPE* smoothed = moving_avg(V, nfft / 2 + 1, smoothord);
+  int top = floor(f0 * (nhar - 2) * nfft);
+  for(int i = top; i < nfft / 2 + 1; i ++)
+    smoothed[i] = smoothed[i - 1];
 
   for(int i = 0; i < nfft / 2 + 1; i ++)
     V[i] = log_2(smoothed[i] + M_EPS);
