@@ -1308,8 +1308,9 @@ filterbank* cig_create_melfreq_filterbank(int nf, FP_TYPE fnyq, int nchannel,
     if(f_2 < f_1 + 400)
       f_2 = f_1 + 400;
     int lower_idx = j == 0 ? 0 : floor(f_0 * nf / fnyq * scale);
-    int upper_idx = ceil(f_1 * nf / fnyq * scale);
-    int centr_idx = round(f_2 * nf / fnyq * scale);
+    int upper_idx = ceil(f_2 * nf / fnyq * scale);
+    int centr_idx = round(f_1 * nf / fnyq * scale);
+    upper_idx = min(upper_idx, nf);
     
     ret -> lower_idx[j] = lower_idx;
     ret -> upper_idx[j] = upper_idx;
