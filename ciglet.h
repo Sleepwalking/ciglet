@@ -1219,7 +1219,7 @@ static inline FP_TYPE** cegm2spgm(FP_TYPE** C, int nfrm, int nfft, int ncep) {
 filterbank* cig_create_empty_filterbank(int nf, FP_TYPE fnyq, int nchannel);
 filterbank* cig_create_plp_filterbank(int nf, FP_TYPE fnyq, int nchannel);
 filterbank* cig_create_melfreq_filterbank(int nf, FP_TYPE fnyq, int nchannel,
-  FP_TYPE min_freq, FP_TYPE max_freq, FP_TYPE scale);
+  FP_TYPE min_freq, FP_TYPE max_freq, FP_TYPE scale, FP_TYPE min_width);
 void cig_delete_filterbank(filterbank* dst);
 
 static inline filterbank* create_filterbank(int nf, FP_TYPE fnyq, int nchannel) {
@@ -1232,7 +1232,8 @@ static inline filterbank* create_plpfilterbank(int nf, FP_TYPE fnyq, int nchanne
 
 static inline filterbank* create_melfilterbank(int nf, FP_TYPE fnyq, int nchannel,
   FP_TYPE min_freq, FP_TYPE max_freq) {
-  return cig_create_melfreq_filterbank(nf, fnyq, nchannel, min_freq, max_freq, 1.0);
+  return cig_create_melfreq_filterbank(
+    nf, fnyq, nchannel, min_freq, max_freq, 1.0, 400.0);
 }
 
 static inline void delete_filterbank(filterbank* dst) {

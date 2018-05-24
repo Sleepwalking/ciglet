@@ -1295,7 +1295,7 @@ filterbank* cig_create_plp_filterbank(int nf, FP_TYPE fnyq, int nchannel) {
 }
 
 filterbank* cig_create_melfreq_filterbank(int nf, FP_TYPE fnyq, int nchannel,
-  FP_TYPE min_freq, FP_TYPE max_freq, FP_TYPE scale) {
+  FP_TYPE min_freq, FP_TYPE max_freq, FP_TYPE scale, FP_TYPE min_width) {
   filterbank* ret = cig_create_empty_filterbank(nf, fnyq, nchannel);
   
   FP_TYPE* freqs = melspace(min_freq, max_freq, nchannel);
@@ -1303,10 +1303,10 @@ filterbank* cig_create_melfreq_filterbank(int nf, FP_TYPE fnyq, int nchannel,
     FP_TYPE f_0 = j == 0 ? 0 : freqs[j - 1];
     FP_TYPE f_1 = freqs[j];
     FP_TYPE f_2 = freqs[j + 1];
-    if(f_0 > f_1 - 400)
-      f_0 = max(0, f_1 - 400);
-    if(f_2 < f_1 + 400)
-      f_2 = f_1 + 400;
+    if(f_0 > f_1 - min_width)
+      f_0 = max(0, f_1 - min_width);
+    if(f_2 < f_1 + min_width)
+      f_2 = f_1 + min_width;
     int lower_idx = j == 0 ? 0 : floor(f_0 * nf / fnyq * scale);
     int upper_idx = ceil(f_2 * nf / fnyq * scale);
     int centr_idx = round(f_1 * nf / fnyq * scale);
