@@ -123,25 +123,57 @@ static void test_numerical() {
 }
 
 static void test_lf() {
-  lfmodel testlf = lfmodel_from_rd(1, 0.008, 0.3);
-  FP_TYPE* freq = linspace(0, 6000, 200);
-  FP_TYPE* lfmagnresp = lfmodel_spectrum(testlf, freq, 200, NULL);
-  for(int i = 0; i < 200; i ++)
+  lfmodel testlf = lfmodel_from_rd(1.0, 0.008, 0.3);
+  int nfft = 1024;
+  int fs = 44100;
+  FP_TYPE* freq = calloc(nfft, sizeof(FP_TYPE));
+  FP_TYPE* time_axis = linspace(0, nfft - 1, nfft);
+  for(int i = 0; i < nfft; i ++)
+    freq[i] = (i <= nfft / 2 ? i : i - nfft) * fs / nfft;
+  freq[0] = 1e-5;
+  FP_TYPE* lfphseresp = calloc(nfft, sizeof(FP_TYPE));
+  FP_TYPE* lfmagnresp = lfmodel_spectrum(testlf, freq, nfft, lfphseresp);
+  FP_TYPE* fftbuffer = calloc(nfft * 2, sizeof(FP_TYPE));
+  for(int i = 0; i < nfft; i ++) lfmagnresp[i] *= fs;
+  FP_TYPE* lfrealresp = polar2real(lfmagnresp, lfphseresp, nfft);
+  FP_TYPE* lfimagresp = polar2imag(lfmagnresp, lfphseresp, nfft);
+  lfrealresp[0] = 0;
+  lfimagresp[0] = 0;
+  for(int i = 0; i < nfft; i ++)
     lfmagnresp[i] = log(lfmagnresp[i]);
-  FP_TYPE* lfperiod = lfmodel_period(testlf, 44100, 500);
+  FP_TYPE* lfperiod = lfmodel_period(testlf, fs, nfft / 2);
+
+  ifft(lfrealresp, lfimagresp, lfrealresp, lfimagresp, nfft, fftbuffer);
+
+  FP_TYPE* shifted_resp = fftshift(lfrealresp, nfft);
+  FP_TYPE max_error = 0;
+  for(int i = 0; i < nfft / 2; i ++) {
+    FP_TYPE err = fabs(lfperiod[i] - shifted_resp[i + nfft / 2]);
+    max_error = max(max_error, err);
+  }
+  free(shifted_resp);
+  printf("LF model (IFFT error): %f%%\n", max_error / testlf.Ee * 100);
+  printf("Note: some 1%% error is expected here due to the IFFT "
+    "version being band-limited while the time-domain version being subjected "
+    "to aliasing.\n");
 
 # if _POSIX_C_SOURCE >= 2
   if(! noplot) {
     figure* lffg = plotopen();
-    plot(lffg, freq, lfmagnresp, 200, 'b');
+    plot(lffg, time_axis, lfrealresp, nfft / 2, 'b');
     plotclose(lffg);
     lffg = plotopen();
-    plot(lffg, NULL, lfperiod, 500, 'b');
+    plot(lffg, NULL, lfperiod, nfft / 2, 'b');
     plotclose(lffg);
   }
 # endif
   free(freq);
+  free(time_axis);
   free(lfmagnresp);
+  free(lfphseresp);
+  free(lfrealresp);
+  free(lfimagresp);
+  free(fftbuffer);
   free(lfperiod);
 }
 
