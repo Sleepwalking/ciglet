@@ -1467,8 +1467,8 @@ static lfparam lfparam_from_lfmodel(lfmodel model) {
   return ret;
 }
 
-// B. Doval, C. d'Alessandro and N. Henrich, "The spectrum of glottal flow models",
-//   Acta acustica united with acustica, 92(6), 1026-1046, 2006.
+// B. Doval, C. d'Alessandro, "Spectral Correlates of Glottal Waveform Models:
+//   an Analytic Study." ICASSP, Munich, 1997.
 FP_TYPE* cig_lfmodel_spectrum(lfmodel model, FP_TYPE* freq, int nf, FP_TYPE* dst_phase) {
   lfparam tmpparam = lfparam_from_lfmodel(model);
   FP_TYPE e = tmpparam.e;
