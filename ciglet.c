@@ -1524,7 +1524,7 @@ FP_TYPE* cig_lfmodel_period(lfmodel model, int fs, int n) {
   int ne = round(Te * fs);
   int nT = round(T0 * fs);
   FP_TYPE* y = calloc(n, sizeof(FP_TYPE));
-  for(i = 0; i < min(ne, n); i ++) {
+  for(i = 0; i < min(ne + 1, n); i ++) {
     FP_TYPE t = (FP_TYPE)i / fs;
     y[i] = E0 * exp_2(a * t) * sin_2(wg * t);
   }
