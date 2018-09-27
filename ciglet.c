@@ -1480,25 +1480,30 @@ FP_TYPE* cig_lfmodel_spectrum(lfmodel model, FP_TYPE* freq, int nf, FP_TYPE* dst
   FP_TYPE Te = tmpparam.Te;
   FP_TYPE Ta = tmpparam.Ta;
   FP_TYPE T0 = tmpparam.T0;
-
+  FP_TYPE e1eTa = e * (1.0 - e * Ta);
+  
   FP_TYPE* dst_magn = calloc(nf, sizeof(FP_TYPE));
   for(int i = 0; i < nf; i ++) {
-    cplx asubipif = c_cplx(a, - 2.0 * M_PI * freq[i]);
+    FP_TYPE Omega = 2.0 * M_PI * freq[i];
+    cplx asubipif = c_cplx(a, - Omega);
     cplx P1 = c_div(c_cplx(E0, 0), c_add(c_mul(asubipif, asubipif), c_cplx(wg * wg, 0)));
     cplx P2 = c_add(c_cplx(wg, 0),
       c_mul(c_exp(c_mul(asubipif, c_cplx(Te, 0))),
             c_sub(c_mul(asubipif, c_cplx(sin_wgTe, 0)), c_cplx(wg * cos_wgTe, 0))
       ));
-    cplx P3 = c_mul(c_cplx(model.Ee, 0),
-      c_div(
-        c_exp(c_cplx(0, - 2.0 * M_PI * freq[i] * Te)),
-        c_mul(c_cplx(0, e * Ta * 2.0 * M_PI * freq[i]), c_cplx(e, 2.0 * M_PI * freq[i]))
+    cplx P3 = c_mul(c_cplx(model.Ee, 0), c_div(
+        c_exp(c_cplx(0, - Omega * Te)),
+        c_mul(c_cplx(0, e * Ta * Omega), c_cplx(e, Omega))
       ));
-    cplx P4 = c_sub(
-      c_mul(c_cplx(e * (1.0 - e * Ta), 0),
-            c_sub(c_cplx(1.0, 0),
-                  c_exp(c_cplx(0, -2.0 * M_PI * freq[i] * (T0 - Te))))),
-            c_cplx(0, e * Ta * 2.0 * M_PI * freq[i]));
+    cplx P4;
+    if(e1eTa < 1.0) { // use approximated version for numerical stability
+      P4 = c_cplx(0, -e * Ta * Omega);
+    } else {
+      P4 = c_sub(
+        c_mul(c_cplx(e1eTa, 0),
+              c_sub(c_cplx(1.0, 0), c_exp(c_cplx(0, -Omega * (T0 - Te))))),
+        c_cplx(0, e * Ta * Omega));
+    }
     cplx G = c_add(c_mul(P1, P2), c_mul(P3, P4));
     dst_magn[i] = c_abs(G);
     if(isnan(dst_magn[i])) {
