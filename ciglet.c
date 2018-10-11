@@ -1439,11 +1439,28 @@ static FP_TYPE efunc(FP_TYPE x, void* env) {
   return 1.0 - exp_3((tmpparam -> Te - tmpparam -> T0) * x) - tmpparam -> Ta * x;
 }
 
-static FP_TYPE afunc(FP_TYPE x, void* env) {
-  lfparam* tmpparam = (lfparam*)env;
-  return (x * x + tmpparam -> wg * tmpparam -> wg) * tmpparam -> sin_wgTe * tmpparam -> A +
-    tmpparam -> wg * exp_3(- x * tmpparam -> Te) + x * tmpparam -> sin_wgTe -
-    tmpparam -> wg * tmpparam -> cos_wgTe;
+static FP_TYPE afunc(FP_TYPE x, lfparam* tmpparam) {
+  FP_TYPE C = tmpparam -> wg * tmpparam -> wg *
+              tmpparam -> sin_wgTe * tmpparam -> A -
+              tmpparam -> wg * tmpparam -> cos_wgTe;
+  FP_TYPE f = tmpparam -> sin_wgTe * tmpparam -> A * x * x +
+              tmpparam -> sin_wgTe * x +
+              tmpparam -> wg * exp_3(- x * tmpparam -> Te) + C;
+  return f;
+}
+
+static FP_TYPE aderiv(FP_TYPE x, lfparam* tmpparam) {
+  FP_TYPE d = 2 * tmpparam -> sin_wgTe * tmpparam -> A * x +
+              tmpparam -> sin_wgTe -
+              tmpparam -> wg * tmpparam -> Te * exp_3(- x * tmpparam -> Te);
+  return d;
+}
+
+static FP_TYPE newton_search(lfparam paramset) {
+  FP_TYPE a = 0;
+  for(int i = 0; i < 8; i ++)
+    a -= afunc(a, & paramset) / aderiv(a, & paramset);
+  return a;
 }
 
 // Fant, Gunnar, Johan Liljencrants, and Qi-guang Lin. "A four-parameter model
@@ -1453,16 +1470,18 @@ static lfparam lfparam_from_lfmodel(lfmodel model) {
     .T0 = model.T0,
     .Te = model.T0 * model.te,
     .Tp = model.T0 * model.tp,
-    .Ta = model.T0 * model.ta
+    .Ta = model.T0 * model.ta,
+    .a  = 0
   };
   ret.wg = M_PI / ret.Tp;
   ret.sin_wgTe = sin_3(ret.wg * ret.Te);
   ret.cos_wgTe = cos_3(ret.wg * ret.Te);
   FP_TYPE e = fzero(efunc, 1.0, 2.0 / (ret.Ta + 1e-9), & ret);
   FP_TYPE e_Te_T0 = exp_3(e * (ret.Te - ret.T0));
-  ret.A = (1.0 - e_Te_T0) / (e * e * ret.Ta) + (ret.Te - ret.T0) * e_Te_T0 / (e * ret.Ta);
+  ret.A = (1.0 - e_Te_T0) / (e * e * ret.Ta) +
+          (ret.Te - ret.T0) * e_Te_T0 / (e * ret.Ta);
   ret.e = e;
-  ret.a = fzero(afunc, 0.0, 1e9, & ret);
+  ret.a = newton_search(ret);
   ret.E0 = -model.Ee / (exp_3(ret.a * ret.Te) * ret.sin_wgTe);
   return ret;
 }
