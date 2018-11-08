@@ -1010,7 +1010,7 @@ static inline FP_TYPE* moving_rms(FP_TYPE* x, int nx, int order) {
     xsqr[i] = x[i] * x[i];
   FP_TYPE* y = moving_avg(xsqr, nx, order);
   for(int i = 0; i < nx; i ++)
-    y[i] = sqrt(y[i]);
+    y[i] = y[i] <= 0 ? 0 : sqrt(y[i]);
   free(xsqr);
   return y;
 }
