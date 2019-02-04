@@ -2,7 +2,7 @@
 ciglet
 ===
 
-Copyright (c) 2016-2017, Kanru Hua
+Copyright (c) 2016-2019, Kanru Hua
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -1311,7 +1311,9 @@ filterbank* cig_create_melfreq_filterbank(int nf, FP_TYPE fnyq, int nchannel,
     int upper_idx = ceil(f_2 * nf / fnyq * scale);
     int centr_idx = round(f_1 * nf / fnyq * scale);
     upper_idx = min(upper_idx, nf);
-    
+    centr_idx = min(centr_idx, upper_idx - 1);
+    lower_idx = min(lower_idx, centr_idx - 1);
+
     ret -> lower_idx[j] = lower_idx;
     ret -> upper_idx[j] = upper_idx;
     for(int k = lower_idx; k < centr_idx; k ++)
