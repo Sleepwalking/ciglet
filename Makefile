@@ -1,7 +1,8 @@
+PREFIX = /usr
 CC = $(CROSS)gcc
 LINK = $(CROSS)gcc
 AR = $(CROSS)ar
-CFLAGS = -D_POSIX_C_SOURCE=2 -DFP_TYPE=float -Og -g -std=c99 -Wall -fPIC $(CFLAGSEXT) -fopenmp
+CFLAGS = -Iexternal -D_POSIX_C_SOURCE=2 -DFP_TYPE=float -Og -g -std=c99 -Wall -fPIC $(CFLAGSEXT) -fopenmp
 ARFLAGS = -rv
 OBJS = ciglet.o fftsg.o fastmedian.o wavfile.o
 
@@ -25,6 +26,12 @@ ciglet-test-fft: libciglet.a test/test-fft.c
 libciglet.a: $(OBJS)
 	$(AR) $(ARFLAGS) libciglet.a $(OBJS)
 	@echo Done.
+
+install: libciglet.a ciglet.h
+	mkdir -p $(PREFIX)/lib/ $(PREFIX)/include/
+	cp libciglet.a $(PREFIX)/lib
+	cp ciglet.h $(PREFIX)/include
+	cp external/fastapprox-all.h $(PREFIX)/include
 
 ciglet.o: ciglet.c ciglet.h
 fftsg.o: external/fftsg_h.c
