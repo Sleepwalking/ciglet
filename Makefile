@@ -2,7 +2,14 @@ PREFIX = /usr
 CC = $(CROSS)gcc
 LINK = $(CROSS)gcc
 AR = $(CROSS)ar
-CFLAGS = -Iexternal -D_POSIX_C_SOURCE=2 -DFP_TYPE=float -Og -g -std=c99 -Wall -fPIC $(CFLAGSEXT) -fopenmp
+
+ifeq 'Darwin' '$(shell uname)'
+  CFLAGS_PLAT =
+else
+  CFLAGS_PLAT = -fopenmp
+endif
+
+CFLAGS = -Iexternal -D_POSIX_C_SOURCE=2 -DFP_TYPE=float -Og -g -std=c99 -Wall -fPIC $(CFLAGSEXT) $(CFLAGS_PLAT)
 ARFLAGS = -rv
 OBJS = ciglet.o fftsg.o fastmedian.o wavfile.o
 
