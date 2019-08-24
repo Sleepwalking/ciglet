@@ -38,10 +38,10 @@ libciglet.a: $(OBJS)
 	@echo Done.
 
 install: libciglet.a ciglet.h
-	mkdir -p $(PREFIX)/lib/ $(PREFIX)/include/
+	mkdir -p $(PREFIX)/lib/ $(PREFIX)/include/ciglet
 	cp libciglet.a $(PREFIX)/lib
-	cp ciglet.h $(PREFIX)/include
-	cp external/fastapprox-all.h $(PREFIX)/include
+	cp ciglet.h $(PREFIX)/include/ciglet
+	cp external/fastapprox-all.h $(PREFIX)/include/ciglet
 
 ciglet.o: ciglet.c ciglet.h
 fftsg.o: external/fftsg_h.c
