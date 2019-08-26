@@ -3,13 +3,15 @@ CC = $(CROSS)gcc
 LINK = $(CROSS)gcc
 AR = $(CROSS)ar
 
+FP_TYPE = float
+
 ifeq 'Darwin' '$(shell uname)'
   CFLAGS_PLAT =
 else
   CFLAGS_PLAT = -fopenmp
 endif
 
-CFLAGS_COMMON = -Iexternal -D_POSIX_C_SOURCE=2 -DFP_TYPE=float -std=c99 -Wall -fPIC $(CFLAGSEXT) $(CFLAGS_PLAT)
+CFLAGS_COMMON = -Iexternal -D_POSIX_C_SOURCE=2 -DFP_TYPE=$(FP_TYPE) -std=c99 -Wall -fPIC $(CFLAGSEXT) $(CFLAGS_PLAT)
 CFLAGS_DBG = $(CFLAGS_COMMON) -Og -g
 CFLAGS_REL = $(CFLAGS_COMMON) -Ofast
 CFLAGS = $(CFLAGS_DBG)
