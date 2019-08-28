@@ -217,8 +217,7 @@ fasterexp (float p)
   return fasterpow2 (1.442695040f * p);
 }
 
-#ifdef __SSE2__
-
+#if defined(__SSE2__) && ! defined(__ICL)
 static inline v4sf
 vfastpow2 (const v4sf p)
 {
@@ -356,7 +355,7 @@ fasterlog (float x)
   return y - 87.989971088f;
 }
 
-#ifdef __SSE2__
+#if defined(__SSE2__) && ! defined(__ICL)
 
 static inline v4sf
 vfastlog2 (v4sf x)
@@ -529,7 +528,7 @@ fasterinverseerf (float x)
   return invk * fasterlog2 ((1.0f + x) / (1.0f - x));
 }
 
-#ifdef __SSE2__
+#if defined(__SSE2__) && ! defined(__ICL)
 
 static inline v4sf
 vfasterfc (v4sf x)
@@ -682,7 +681,7 @@ fasterdigamma (float x)
   return -1.0f / x - 1.0f / (2 * onepx) + fasterlog (onepx);
 }
 
-#ifdef __SSE2__
+#if defined(__SSE2__) && ! defined(__ICL)
 
 static inline v4sf
 vfastlgamma (v4sf x)
@@ -822,7 +821,7 @@ fastertanh (float p)
   return -1.0f + 2.0f / (1.0f + fasterexp (-2.0f * p));
 }
 
-#ifdef __SSE2__
+#if defined(__SSE2__) && ! defined(__ICL)
 
 static inline v4sf
 vfastsinh (const v4sf p)
@@ -1001,7 +1000,7 @@ fasterlambertwexpx (float x)
   return w * (1.0f + x - logw) / (1.0f + w);
 }
 
-#ifdef __SSE2__
+#if defined(__SSE2__) && ! defined(__ICL)
 
 static inline v4sf
 vfastlambertw (v4sf x)
@@ -1150,7 +1149,7 @@ fasterpow (float x,
   return fasterpow2 (p * fasterlog2 (x));
 }
 
-#ifdef __SSE2__
+#if defined(__SSE2__) && ! defined(__ICL)
 
 static inline v4sf
 vfastpow (const v4sf x,
@@ -1226,7 +1225,7 @@ fastersigmoid (float x)
   return 1.0f / (1.0f + fasterexp (-x));
 }
 
-#ifdef __SSE2__
+#if defined(__SSE2__) && ! defined(__ICL)
 
 static inline v4sf
 vfastsigmoid (const v4sf x)
@@ -1447,7 +1446,7 @@ fastertanfull (float x)
   return fastersin (xnew) / fastercos (xnew);
 }
 
-#ifdef __SSE2__
+#if defined(__SSE2__) && ! defined(__ICL)
 
 static inline v4sf
 vfastsin (const v4sf x)
