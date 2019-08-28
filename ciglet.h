@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <math.h>
 
 #ifndef CIGLET_SINGLE_FILE
-  #include "fastapprox-all.h"
+  #include "external/fastapprox-all.h"
 #endif
 
 // === Scalar operations ===
