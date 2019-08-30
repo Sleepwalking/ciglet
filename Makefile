@@ -4,6 +4,7 @@ LINK = $(CROSS)gcc
 AR = $(CROSS)ar
 
 FP_TYPE = float
+CONFIG  = Debug
 
 ifeq 'Darwin' '$(shell uname)'
   CFLAGS_PLAT =
@@ -14,7 +15,11 @@ endif
 CFLAGS_COMMON = -Iexternal -D_POSIX_C_SOURCE=2 -DFP_TYPE=$(FP_TYPE) -std=c99 -Wall -fPIC $(CFLAGSEXT) $(CFLAGS_PLAT)
 CFLAGS_DBG = $(CFLAGS_COMMON) -Og -g
 CFLAGS_REL = $(CFLAGS_COMMON) -Ofast
-CFLAGS = $(CFLAGS_DBG)
+ifeq ($(CONFIG), Debug)
+  CFLAGS = $(CFLAGS_DBG)
+else
+  CFLAGS = $(CFLAGS_REL)
+endif
 ARFLAGS = -rv
 OBJS = ciglet.o fftsg.o fastmedian.o wavfile.o
 
