@@ -1434,6 +1434,7 @@ typedef struct {
   FP_TYPE A;
   FP_TYPE a;
   FP_TYPE E0;
+  FP_TYPE scale;
 } lfparam;
 
 static FP_TYPE efunc(FP_TYPE x, void* env) {
@@ -1468,12 +1469,19 @@ static FP_TYPE newton_search(lfparam paramset) {
 // Fant, Gunnar, Johan Liljencrants, and Qi-guang Lin. "A four-parameter model
 //    of glottal flow." STL-QPSR 4.1985 (1985): 1-13.
 static lfparam lfparam_from_lfmodel(lfmodel model) {
+  FP_TYPE scale = 1.0;
+  const FP_TYPE max_hz = 800.0f;
+  if(model.T0 < 1.0 / max_hz) {
+    scale = 1.0 / model.T0 / max_hz;
+    model.T0 = 1.0 / max_hz;
+  }
   lfparam ret = {
     .T0 = model.T0,
     .Te = model.T0 * model.te,
     .Tp = model.T0 * model.tp,
     .Ta = model.T0 * model.ta,
-    .a  = 0
+    .a  = 0,
+    .scale = scale
   };
   ret.wg = M_PI / ret.Tp;
   ret.sin_wgTe = sin_3(ret.wg * ret.Te);
@@ -1505,7 +1513,7 @@ FP_TYPE* cig_lfmodel_spectrum(lfmodel model, FP_TYPE* freq, int nf, FP_TYPE* dst
   
   FP_TYPE* dst_magn = calloc(nf, sizeof(FP_TYPE));
   for(int i = 0; i < nf; i ++) {
-    FP_TYPE Omega = 2.0 * M_PI * freq[i];
+    FP_TYPE Omega = 2.0 * M_PI * freq[i] / tmpparam.scale;
     cplx asubipif = c_cplx(a, - Omega);
     cplx P1 = c_div(c_cplx(E0, 0), c_add(c_mul(asubipif, asubipif), c_cplx(wg * wg, 0)));
     cplx P2 = c_add(c_cplx(wg, 0),
@@ -1547,15 +1555,15 @@ FP_TYPE* cig_lfmodel_period(lfmodel model, int fs, int n) {
   FP_TYPE T0 = tmpparam.T0;
 
   int i;
-  int ne = round(Te * fs);
-  int nT = round(T0 * fs);
+  int ne = round(Te * fs / tmpparam.scale);
+  int nT = round(T0 * fs / tmpparam.scale);
   FP_TYPE* y = calloc(n, sizeof(FP_TYPE));
   for(i = 0; i < min(ne + 1, n); i ++) {
-    FP_TYPE t = (FP_TYPE)i / fs;
+    FP_TYPE t = (FP_TYPE)i / fs * tmpparam.scale;
     y[i] = E0 * exp_2(a * t) * sin_2(wg * t);
   }
   for(; i < min(nT, n); i ++) {
-    FP_TYPE t = (FP_TYPE)i / fs;
+    FP_TYPE t = (FP_TYPE)i / fs * tmpparam.scale;
     y[i] = - model.Ee / e / Ta * (exp_2(- e * (t - Te)) - exp_2(- e * (T0 - Te)));
   }
   return y;
